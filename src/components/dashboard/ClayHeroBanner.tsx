@@ -45,10 +45,13 @@ export function ClayHeroBanner({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl p-4 sm:p-7 min-h-[110px] sm:min-h-[160px] flex items-center justify-between transition-all duration-300",
+        "relative overflow-hidden rounded-3xl p-5 sm:p-7 min-h-[110px] sm:min-h-[160px] flex items-center justify-between transition-all duration-300",
         themeClass,
         className
       )}
+      style={{
+        boxShadow: '0 16px 40px -6px rgba(0,0,0,0.07), 0 6px 16px -3px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.95)',
+      }}
     >
       {/* Decorative Glow */}
       <div

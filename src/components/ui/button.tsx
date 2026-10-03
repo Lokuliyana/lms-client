@@ -12,17 +12,17 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-90 hover:shadow-md",
+          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-95 hover:shadow-md [box-shadow:0_4px_14px_rgba(79,70,229,0.22),inset_0_1px_1px_rgba(255,255,255,0.35)]",
         primary:
-          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-90 hover:shadow-md",
+          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-95 hover:shadow-md [box-shadow:0_4px_14px_rgba(79,70,229,0.22),inset_0_1px_1px_rgba(255,255,255,0.35)]",
         destructive:
-          "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300",
+          "bg-rose-50 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 shadow-2xs",
         outline:
-          "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm",
+          "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-2xs [box-shadow:0_2px_8px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)]",
         secondary:
-          "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/60 shadow-sm",
+          "bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60 shadow-2xs",
         ghost:
-          "hover:bg-slate-100 hover:text-slate-900 text-slate-600",
+          "hover:bg-black/5 hover:text-slate-900 text-slate-600",
         link:
           "text-primary underline-offset-4 hover:underline",
       },

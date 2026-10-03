@@ -158,10 +158,22 @@ export function Topbar({
               </button>
             ) : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="rounded-full px-3.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white/70"
+                >
                   <Link href="/login">Log in</Link>
                 </Button>
-                <Button variant="primary" size="sm" asChild>
+                <Button
+                  size="sm"
+                  asChild
+                  className="rounded-full px-4 text-xs font-semibold bg-primary text-primary-foreground shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
+                  style={{
+                    boxShadow: '0 4px 14px rgba(79,70,229,0.25), inset 0 1px 1px rgba(255,255,255,0.4)',
+                  }}
+                >
                   <Link href="/register">Sign up</Link>
                 </Button>
               </div>

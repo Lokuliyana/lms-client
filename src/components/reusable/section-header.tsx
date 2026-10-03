@@ -264,11 +264,14 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "relative overflow-visible rounded-2xl sm:rounded-3xl border px-4 sm:px-6 py-3 sm:py-4 min-h-[80px] sm:min-h-[92px] flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 transition-all duration-300 mt-2 sm:mt-4",
+        "relative overflow-visible rounded-3xl border px-4 sm:px-6 py-3.5 sm:py-4 min-h-[82px] sm:min-h-[96px] flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 transition-all duration-300 mt-2 sm:mt-4",
         illustration ? "pr-28 sm:pr-40 md:pr-48" : "",
         theme.container,
         className
       )}
+      style={{
+        boxShadow: '0 12px 32px -4px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)',
+      }}
     >
       {/* Decorative Glow Elements */}
       <div

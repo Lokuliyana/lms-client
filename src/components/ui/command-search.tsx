@@ -241,13 +241,18 @@ export function CommandSearchTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600 border border-slate-200 rounded-lg transition-all duration-150 w-56 lg:w-72 justify-between"
+      className="hidden md:flex items-center gap-2 px-3.5 py-1.5 text-xs text-slate-500 rounded-full transition-all duration-200 w-56 lg:w-72 justify-between hover:text-slate-800"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,0.9)',
+      }}
     >
       <div className="flex items-center gap-2">
-        <Search className="w-3.5 h-3.5" />
-        <span>Quick search platform...</span>
+        <Search className="w-3.5 h-3.5 text-indigo-500" />
+        <span className="text-slate-400">Search platform...</span>
       </div>
-      <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-white border border-slate-200 rounded shadow-[0_1px_0_rgba(0,0,0,0.06)]">
+      <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-[#FAF9F5] border border-black/5 rounded-md shadow-2xs">
         ⌘K
       </kbd>
     </button>

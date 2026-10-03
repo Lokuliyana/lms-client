@@ -47,7 +47,7 @@ const badgeVariants = cva(
       {
         variant: "outline",
         class:
-          "bg-white/70 backdrop-blur border-slate-200 text-slate-700 hover:bg-white",
+          "bg-white/90 backdrop-blur border-black/5 text-slate-700 hover:bg-white [box-shadow:0_2px_6px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.9)]",
       },
     ],
     defaultVariants: {

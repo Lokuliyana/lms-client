@@ -241,14 +241,18 @@ export default function ClassesPage() {
     });
   }, [classes, subjectFilter, gradeFilter, enrollmentFilter, enrolledStatusMap, grades, subjects]);
 
-  const groupedByGrade: Record<string, ClassData[]> = useMemo(() => {
+  const sortedGradeEntries = useMemo(() => {
     const groups: Record<string, ClassData[]> = {};
     for (const c of filteredClasses) {
       const gradeLabel = formatGradeName(c.grade, grades);
       if (!groups[gradeLabel]) groups[gradeLabel] = [];
       groups[gradeLabel].push(c);
     }
-    return groups;
+    return Object.entries(groups).sort(([a], [b]) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10) || 999;
+      const numB = parseInt(b.replace(/\D/g, ""), 10) || 999;
+      return numA - numB;
+    });
   }, [filteredClasses, grades]);
 
   if (loading) return <SectionLoader />;
@@ -336,21 +340,19 @@ export default function ClassesPage() {
           sheetTitle="Filter Classes"
         />
 
-        {/* Classes Sections grouped by grade */}
-        {Object.entries(groupedByGrade).map(([gradeLabel, classList]) => (
-          <section key={gradeLabel} className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
-              <div className="flex items-center gap-2.5">
-                <div className="w-1.5 h-4.5 rounded-full bg-primary" />
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                  {gradeLabel.startsWith("Grade") ? `${gradeLabel} Classes` : `Grade ${gradeLabel} Classes`}
-                </h2>
-                <span className="text-xs font-semibold text-slate-500 bg-slate-100/90 border border-slate-200/60 px-2 py-0.5 rounded-full">
-                  {classList.length} {classList.length === 1 ? "class" : "classes"}
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        {/* Classes Sections grouped by grade inside CardSection */}
+        {sortedGradeEntries.map(([gradeLabel, classList]) => (
+          <CardSection
+            key={gradeLabel}
+            title={gradeLabel.startsWith("Grade") ? `${gradeLabel} Classes` : `Grade ${gradeLabel} Classes`}
+            description={`Explore available active courses, batches, and revision schedules for ${gradeLabel.startsWith("Grade") ? gradeLabel : `Grade ${gradeLabel}`}.`}
+            actions={
+              <span className="text-xs font-semibold text-indigo-700 bg-indigo-50/90 border border-indigo-100/80 px-2.5 py-1 rounded-full shadow-2xs">
+                {classList.length} {classList.length === 1 ? "Class" : "Classes"}
+              </span>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 pt-1">
               {classList.map((classItem: any) => (
                 <ClassCard
                   id={classItem._id}
@@ -377,7 +379,7 @@ export default function ClassesPage() {
                 />
               ))}
             </div>
-          </section>
+          </CardSection>
         ))}
         
         {filteredClasses.length === 0 && (

@@ -62,7 +62,14 @@ export function CatalogFilterBar({
     (subjectFilter && subjectFilter !== "all" ? 1 : 0);
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 p-2 sm:p-2.5 shadow-2xs space-y-2 sm:space-y-0">
+    <div
+      className="rounded-2xl p-2 sm:p-2.5 space-y-2 sm:space-y-0 transition-all duration-300"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 8px 24px -4px rgba(0,0,0,0.05), 0 2px 8px -2px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.95)',
+      }}
+    >
       {/* Mobile Top Bar: Optional Search + Filter Sheet Trigger */}
       <div className="flex sm:hidden items-center gap-2 w-full">
         {onSearchQueryChange && (
@@ -130,10 +137,10 @@ export function CatalogFilterBar({
                     onClick={() => onGradeFilterChange(opt.value)}
                     type="button"
                     className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all duration-200 border",
+                      "px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all duration-200 border",
                       isSelected
-                        ? "bg-primary text-primary-foreground border-primary shadow-xs ring-2 ring-primary/20"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200/80 shadow-2xs"
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm ring-2 ring-primary/20 scale-[1.02]"
+                        : "bg-[#FAF9F5] hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-black/5 shadow-2xs"
                     )}
                   >
                     {opt.label}
