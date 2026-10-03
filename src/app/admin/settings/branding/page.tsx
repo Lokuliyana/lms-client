@@ -247,7 +247,7 @@ export default function BrandingSettingsPage() {
 
   return (
     <AccessGate requiredPermission="branding.manage" fallbackTitle="Teacher Access Only">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="space-y-6 sm:space-y-7">
         {/* Sleek Compact Header with 3D Illustration */}
         <SectionHeader
           title="Platform Identity & Live Themes"

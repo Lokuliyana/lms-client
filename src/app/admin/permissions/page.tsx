@@ -31,7 +31,7 @@ export default function PermissionMatrixPage() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
+      <div className="space-y-6 sm:space-y-7">
         <div className="h-28 w-full bg-slate-100 rounded-3xl animate-pulse" />
         <div className="h-16 w-full bg-slate-100 rounded-2xl animate-pulse" />
         <div className="h-80 w-full bg-slate-100 rounded-2xl animate-pulse" />
@@ -40,7 +40,7 @@ export default function PermissionMatrixPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="space-y-6 sm:space-y-7">
       <SectionHeader
         title="Permission Matrix"
         breadcrumbs={[

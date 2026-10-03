@@ -215,8 +215,7 @@ export function CreateQuizForm({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-      <div className="relative bg-[#f9fafb] min-h-screen pb-20 px-4 md:px-6 space-y-10 overflow-hidden">
+    <div className="space-y-6 sm:space-y-7">
         <SectionHeader
           title={isEditMode ? "Edit Quiz" : "Create New Quiz"}
           description={
@@ -447,7 +446,6 @@ export function CreateQuizForm({
             <Save className="w-5 h-5 mr-2" /> {submitLabel}
           </Button>
         </form>
-      </div>
 
       {/* Success Dialog (used only in create mode effectively) */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>

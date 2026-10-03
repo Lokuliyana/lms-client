@@ -36,7 +36,7 @@
       "createClass": "Create class"
     },
     "layout": {
-      "logo": "/images/logo.png",
+      "logo": "/images/logo.svg",
       "organization": {
         "name": "NexvoLearn",
         "alternateName": "MathsScience LK",
@@ -62,7 +62,7 @@
     },
     "footer": {
       "brand": {
-        "logo": "/images/logo.png",
+        "logo": "/images/logo.svg",
         "alt": "NexvoLearn Logo",
         "description": "Empowering Sri Lankan students through structured, engaging, and measurable online learning.",
         "teacher": "Teacher: NexvoLearn Instructor"

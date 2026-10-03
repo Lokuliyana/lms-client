@@ -46,7 +46,7 @@ const AdminClassesPage = () => {
   if (!isAuthenticated || !isTeacher) return null;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-7">
       <SectionHeader
         title="Manage Classes"
         description="View and manage active lecture streams, enrolled batches, and academic curriculum."

@@ -96,7 +96,7 @@ export default function AddRecordingPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-4 sm:p-6">
+    <div className="space-y-6 sm:space-y-7">
       <SectionHeader
         title="Add Class Recording"
         breadcrumbs={[

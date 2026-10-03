@@ -32,7 +32,7 @@ export const DEFAULT_BRANDING: BrandingConfig = {
   contactEmail: 'support@nexvolearn.com',
   supportWhatsApp: '+94771234567',
   assets: {
-    logoUrl: '/images/logo.png',
+    logoUrl: '/images/logo.svg',
     faviconUrl: '/favicon.ico',
     heroBannerUrl: '/images/hero.png',
     loginIllustrationUrl: '/images/login.png',

@@ -105,8 +105,7 @@ export default function AdminExamsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6 sm:space-y-7">
         {/* Reusable Section Header */}
         <SectionHeader
           icon={Award}
@@ -367,7 +366,6 @@ export default function AdminExamsPage() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
