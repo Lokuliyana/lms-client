@@ -510,7 +510,7 @@ export const ClassCard: FC<ClassCardProps> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-4 space-y-4">
+      <div className="flex flex-col h-full rounded-3xl overflow-hidden p-4 space-y-4" style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03)' }}>
         <div className="w-full aspect-[4/3] rounded-2xl bg-slate-100 animate-pulse" />
         <div className="h-6 w-3/4 rounded-lg bg-slate-100 animate-pulse" />
         <div className="h-4 w-1/2 rounded-md bg-slate-100 animate-pulse" />
@@ -533,10 +533,17 @@ export const ClassCard: FC<ClassCardProps> = ({
   return (
     <div
       className={cn(
-        "group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-lg hover:border-slate-300 transition-all duration-300 hover:-translate-y-0.5",
+        "group relative flex flex-col h-full rounded-3xl overflow-hidden transition-all duration-300",
         isLiveNow && "ring-2 ring-emerald-500/50",
         className
       )}
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)',
+      }}
+      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9)'; el.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)'; el.style.transform = 'translateY(0)'; }}
     >
       {/* Image Container: Soft pastel background for 3D clay illustrations, or dark cover for real photos */}
       <div
@@ -658,7 +665,7 @@ export const ClassCard: FC<ClassCardProps> = ({
         </div>
 
         {/* Next Session Slot */}
-        <div className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2 min-h-[52px] flex items-center">
+        <div className="rounded-xl px-3 py-2 min-h-[52px] flex items-center" style={{ background: 'rgba(250,249,245,0.9)', border: '1px solid rgba(0,0,0,0.06)' }}>
           {showLiveActionInSlot ? (
             <div className="w-full space-y-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">

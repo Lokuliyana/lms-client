@@ -248,12 +248,14 @@ export default function QuizCard({ quiz }: QuizCardProps) {
   return (
     <>
       <Card
-        className="
-        relative overflow-hidden rounded-2xl
-        bg-white border border-slate-200/90
-        shadow-xs hover:shadow-md transition-all duration-300
-        flex flex-col justify-between h-auto sm:h-[285px]
-      "
+        className="relative overflow-hidden rounded-2xl flex flex-col justify-between h-full transition-all duration-300 group/card"
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(0,0,0,0.07)',
+          boxShadow: '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
       >
         <div
           aria-hidden
@@ -281,7 +283,7 @@ export default function QuizCard({ quiz }: QuizCardProps) {
               <img
                 src={watermark}
                 alt=""
-                className="w-36 h-36 object-contain opacity-[0.18]"
+                className="w-36 h-36 object-contain opacity-[0.22]"
               />
             </div>
           );
@@ -351,7 +353,7 @@ export default function QuizCard({ quiz }: QuizCardProps) {
             <div className="my-1.5 h-px w-full bg-slate-100" />
 
             {/* Equalized 3-Column Metadata Bar */}
-            <div className="grid grid-cols-3 gap-2 py-1.5 px-2.5 rounded-xl bg-slate-50/80 border border-slate-100/90 text-center">
+            <div className="grid grid-cols-3 gap-2 py-1.5 px-2.5 rounded-xl text-center" style={{ background: 'rgba(240,238,255,0.45)', border: '1px solid rgba(79,70,229,0.08)' }}>
               <div className="flex flex-col items-center justify-center min-w-0">
                 <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Count</span>
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1 mt-0.5 truncate">

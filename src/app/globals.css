@@ -14,6 +14,18 @@
   --accent-color: #06b6d4;
   --accent-rgb: 6 182 212;
   --accent-foreground: #ffffff;
+  /* Canvas & Surface tokens */
+  --canvas: #F6F5F0;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #FAF9F5;
+  --surface-sidebar: #FAF9F5;
+  /* Elevation shadow tokens */
+  --shadow-card: 0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03);
+  --shadow-card-hover: 0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05);
+  --shadow-pill: 0 4px 14px rgba(0,0,0,0.04);
+  --shadow-topbar: 0 2px 20px -4px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  /* Inset bevel highlight */
+  --bevel: inset 0 1px 1px rgba(255,255,255,0.9);
 }
 
 /* Custom Fonts */
@@ -110,4 +122,21 @@ ol > li[data-list="ordered"] {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
+
+/* Canvas base & surface utilities */
+.bg-canvas { background-color: var(--canvas); }
+.bg-surface-primary { background-color: var(--surface-primary); }
+.bg-surface-secondary { background-color: var(--surface-secondary); }
+
+/* Clay card elevation */
+.shadow-clay {
+  box-shadow: var(--shadow-card), var(--bevel);
+}
+.shadow-clay-hover {
+  box-shadow: var(--shadow-card-hover), var(--bevel);
+}
+.shadow-pill-soft {
+  box-shadow: var(--shadow-pill);
+}
+
 

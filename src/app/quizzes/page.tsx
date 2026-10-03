@@ -134,13 +134,20 @@ function StatCard({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border bg-white/90 backdrop-blur-sm shadow-2xs px-4 py-3 flex items-center gap-3 transition-all ${
+      className={`rounded-2xl border px-4 py-3 flex items-center gap-3 transition-all ${
         active
-          ? "ring-2 ring-indigo-500 shadow-xs border-indigo-200"
-          : "hover:border-slate-300 hover:shadow-xs"
+          ? "ring-2 ring-indigo-500 shadow-md border-indigo-200"
+          : "hover:border-slate-300 hover:-translate-y-0.5"
       }`}
+      style={{
+        background: '#FFFFFF',
+        borderColor: active ? 'rgba(79,70,229,0.3)' : 'rgba(0,0,0,0.06)',
+        boxShadow: active
+          ? '0 12px 28px -4px rgba(79,70,229,0.15), inset 0 1px 1px rgba(255,255,255,0.9)'
+          : '0 8px 24px -4px rgba(0,0,0,0.05), 0 2px 8px -2px rgba(0,0,0,0.02), inset 0 1px 1px rgba(255,255,255,0.9)',
+      }}
     >
-      <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+      <span className="p-2.5 rounded-xl bg-indigo-50/90 text-indigo-600 shrink-0">
         <Icon className="w-4 h-4" />
       </span>
       <div className="text-left min-w-0">

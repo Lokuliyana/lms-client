@@ -275,17 +275,17 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
   ];
 
   return (
-    <aside className="flex flex-col w-full h-full bg-white border-r border-slate-200/90 text-sm select-none">
+    <aside className="flex flex-col w-full h-full text-sm select-none" style={{ background: '#FAF9F5', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
       {/* Mobile Drawer Header with Close Button */}
       {onCloseMobile && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50/80 sm:hidden shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 sm:hidden shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.07)', background: 'rgba(246,245,240,0.9)' }}>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Navigation Menu</span>
           </div>
           <button
             type="button"
             onClick={onCloseMobile}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors"
             aria-label="Close menu"
           >
             <X className="w-4 h-4" />
@@ -351,7 +351,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           <button
             type="button"
             onClick={() => setAcademicOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 tracking-wider uppercase transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
           >
             <div className="flex items-center gap-2">
               <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
@@ -500,7 +500,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
             <button
               type="button"
               onClick={() => setAssessmentsOpen((o) => !o)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 tracking-wider uppercase transition-colors"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
             >
               <div className="flex items-center gap-2">
                 <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
@@ -555,7 +555,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
             <button
               type="button"
               onClick={() => setOperationsOpen((o) => !o)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 tracking-wider uppercase transition-colors"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
             >
               <div className="flex items-center gap-2">
                 <CheckSquare className="w-3.5 h-3.5 text-indigo-600" />
@@ -609,7 +609,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           <button
             type="button"
             onClick={() => setCommerceOpen((o) => !o)}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 tracking-wider uppercase transition-colors"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
           >
             <div className="flex items-center gap-2">
               <Package className="w-3.5 h-3.5 text-indigo-600" />
@@ -663,7 +663,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
             <button
               type="button"
               onClick={() => setAdminOpen((o) => !o)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 tracking-wider uppercase transition-colors"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Settings className="w-3.5 h-3.5 text-indigo-600" />
@@ -714,7 +714,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
       </div>
 
       {/* UNIVERSAL BOTTOM SECTION (ALL ROLES) */}
-      <div className="p-3 border-t border-slate-200/90 bg-slate-50/50 space-y-2 shrink-0" ref={accountRef}>
+      <div className="p-3 space-y-2 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.07)', background: 'rgba(246,245,240,0.6)' }} ref={accountRef}>
         {/* Universal Links: About Platform & Profile */}
         {/* <div className="space-y-0.5 mb-1">
           <Link

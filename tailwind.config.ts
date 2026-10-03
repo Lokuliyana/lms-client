@@ -68,6 +68,30 @@ module.exports = {
         warning: "#f59e0b",
         success: "#10b981",
         dark: "#0f172a",
+        // Canvas & surface tokens
+        canvas: '#F6F5F0',
+        surface: {
+          DEFAULT: '#FFFFFF',
+          secondary: '#FAF9F5',
+          sidebar: '#FAF9F5',
+        },
+        // Pastel accent tints
+        lavender: {
+          tint: '#F0EEFF',
+          text: '#5B21B6',
+        },
+        mint: {
+          tint: '#E8F8F2',
+          text: '#065F46',
+        },
+        butter: {
+          tint: '#FEF3E2',
+          text: '#9A3412',
+        },
+        coral: {
+          tint: '#FFE8EC',
+          text: '#9F1239',
+        },
       },
       fontSize: {
         xs: "0.75rem",
@@ -106,6 +130,10 @@ module.exports = {
       boxShadow: {
         soft: "0 4px 6px rgba(0, 0, 0, 0.1)",
         hard: "0 4px 10px rgba(0, 0, 0, 0.2)",
+        'clay': '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03)',
+        'clay-hover': '0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05)',
+        'pill': '0 4px 14px rgba(0,0,0,0.04)',
+        'topbar': '0 2px 20px -4px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
       },
       transitionProperty: {
         width: "width",

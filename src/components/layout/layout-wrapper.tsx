@@ -42,7 +42,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNav = isAuthScreen || isFocusArena;
 
   return (
-    <div className="relative min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#F6F5F0] text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
       <ReLoginDialog />
       <Toaster />
 
@@ -71,7 +71,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
           />
 
           {/* Desktop Sidebar: Fixed left beneath Topbar */}
-          <div className="hidden sm:block fixed top-14 sm:top-15 left-0 h-[calc(100vh-3.75rem)] w-64 z-20 transition-all duration-200">
+          <div className="hidden sm:block fixed top-14 sm:top-15 left-0 h-[calc(100vh-3.75rem)] w-64 z-20 transition-all duration-200 bg-[#FAF9F5]">
             <SideNavbar />
           </div>
 
