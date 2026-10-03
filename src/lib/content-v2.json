@@ -1,6 +1,575 @@
 {
-  "home": {
-    "title": "Welcome to LMS Engine",
-    "subtitle": "The modern soft-white learning platform."
+  "site": {
+    "metadata": {
+      "title": "NexvoLearn | NexvoLearn Instructor",
+      "description": "NexvoLearn — Sri Lanka’s trusted online Maths & Science tutoring platform by NexvoLearn Instructor. Classes for Grades 6–O/L with quizzes, recordings, and progress tracking.",
+      "keywords": [
+        "NexvoLearn",
+        "NexvoLearn Instructor",
+        "NexvoLearn Instructor",
+        "MathsScience Sri Lanka",
+        "Maths classes",
+        "Science tuition",
+        "O/L classes",
+        "ගණිතය",
+        "විද්‍යාව",
+        "Online classes"
+      ],
+      "url": "https://www.nexvolearn.com",
+      "ogImage": "https://www.nexvolearn.com/og/main.jpg",
+      "locale": "en_LK"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "classes": "Classes",
+      "quizzes": "Quizzes",
+      "performance": "Performance",
+      "about": "About",
+      "user": "User",
+      "admin": "Admin",
+      "papers": "Papers Download",
+      "createRecording": "Create recording",
+      "createQuiz": "Create quiz",
+      "enrollStudents": "Enroll students",
+      "grades": "Grades",
+      "quickAction": "Quick Action",
+      "createClass": "Create class"
+    },
+    "layout": {
+      "logo": "/images/logo.png",
+      "organization": {
+        "name": "NexvoLearn",
+        "alternateName": "MathsScience LK",
+        "url": "https://www.nexvolearn.com",
+        "logo": "https://www.nexvolearn.com/favicon.ico",
+        "description": "Sri Lanka’s trusted online Maths & Science tutoring platform by NexvoLearn Instructor.",
+        "sameAs": [
+          "https://www.youtube.com/@mrmathsscience",
+          "https://www.facebook.com/mrmathsscience",
+          "https://www.instagram.com/mrmathsscience"
+        ],
+        "contactPoint": [
+          {
+            "telephone": "+94-000-0000",
+            "contactType": "customer support",
+            "availableLanguage": [
+              "en",
+              "si"
+            ]
+          }
+        ]
+      }
+    },
+    "footer": {
+      "brand": {
+        "logo": "/images/logo.png",
+        "alt": "NexvoLearn Logo",
+        "description": "Empowering Sri Lankan students through structured, engaging, and measurable online learning.",
+        "teacher": "Teacher: NexvoLearn Instructor"
+      },
+      "services": [
+        {
+          "label": "Zoom Classes",
+          "desc": "Live, interactive learning sessions for Grades 6–O/L.",
+          "href": "/classes"
+        },
+        {
+          "label": "Recordings",
+          "desc": "Access to class replays for flexible, anytime revision.",
+          "href": "/classes"
+        },
+        {
+          "label": "Quizzes",
+          "desc": "Topic-based interactive quizzes for mastery and retention.",
+          "href": "/quizzes"
+        },
+        {
+          "label": "Performance Tracker",
+          "desc": "Visual analytics on your progress and scores.",
+          "href": "/quizzes/performance"
+        }
+      ],
+      "social": {
+        "facebook": {
+          "url": "https://web.facebook.com/p/Mr-MathsScience-NexvoLearn-Nallaperuma-61572265718089"
+        },
+        "youtube": {
+          "url": "https://youtube.com/@mr.mathsscience?si=Cu79QMaZlRZx6bX3"
+        },
+        "whatsapp": {
+          "url": "https://wa.me/+94706844133"
+        }
+      },
+      "cta": {
+        "label": "Join a Class",
+        "href": "/classes",
+        "subtext": "Learn smarter, not harder."
+      },
+      "copyright": {
+        "text": "© {year} NexvoLearn — NexvoLearn Instructor. All rights reserved.",
+        "builtBy": {
+          "text": "Built for Sri Lankan students • nexvolearn.com • Created by",
+          "name": "Soluna",
+          "url": "https://soluna-iota.vercel.app/"
+        }
+      }
+    },
+    "title": "Test Title"
+  },
+  "pages": {
+    "about": {
+      "metadata": {
+        "title": "About | NexvoLearn",
+        "description": "Learn about NexvoLearn Instructor and the NexvoLearn platform.",
+        "keywords": [
+          "About",
+          "NexvoLearn Instructor",
+          "NexvoLearn"
+        ],
+        "url": "https://www.nexvolearn.com/info",
+        "ogImage": "https://www.nexvolearn.com/og/main.jpg"
+      },
+      "hero": {
+        "label": "About",
+        "heading": "<p>I’m NexvoLearn Instructor</p>",
+        "subHeading": "Engineering undergraduate • Law student • A/L Maths and Science educator • Founder of NexvoLearn",
+        "introduction": "<p>ඔබේ ගුරුවරයා,</p>",
+        "bio": [
+          "කොළඹ තර්ස්ටන් විද්‍යාලයෙන් අ.පො.ස සාමාන්‍ය පෙළ A සාමාර්ථ 09ක් හා උසස් පෙළ ගණිත අංශයෙන් හදාරා පළමු වරම A සාමාර්ථ 2 ක් සහ B සාමාර්ථයක් සහිතව තම කුඩා කළ සිට සිහිනය වූ නාවුක ඉංජිනේරුවරයෙකු වීම සදහා දිවයිනේ නාවුක ඉංජිනේරු සහ නාවුක නිර්මාණවේදය පිළිබද ගෞරව උපාධියක් ලබා දෙන එකම විශ්ව විද්‍යාලය වන රුහුණ විශ්ව විද්‍යාලයට ඇතුළත් විය.",
+          "දැනට එහි 3 වන වසරේ ඉගෙනු​ම ලබමින් වේගයෙන් තාක්ෂණික වශයෙන් වෙනස් වන ලෝකය තුළ අත්‍යවශ්‍ය සංකල්පයක් වන STEM( Science, Technology, Engineering, Mathematics) මත පදනම්ව කටපාඩම් සංස්කෘතියෙන් ඔබ්බට, ළමුන්ගේ මොළ ගෙඩි හදන්නටම තියෙන විෂයන් දෙක වන ගණිතය සහ විද්‍යාව යන විෂයන් දෙක වසර 3ක් පුරාවට ඉගැන්වීම් සිදු කරන අතර ඉන් ළමුන් 18 ​කින් යුත් පළමු කණ්ඩායම 2024 වසරේ සාමාන්‍ය පෙළ විභාගය සදහා පෙනී සිටින ලදී. එහි ලංකාවේ අන් කිසිදු පංතියක් බිහි නොකළ අන්දමේ ගණිතයට 75% ට එහා ප්‍රතිඵලයකුත් විද්‍යාවට 50% ට එහා ප්‍රතිඵලයකුත් සමත් ප්‍රතිශතය 100% ලෙස අතිවිශිෂ්ට ප්‍රතිඵලයක් පෙන්වනු ලැබුවේ අලුත් පරම්‍පරාවට ගැළපෙන, උත්සහය මත පමණක්ම පදනම් වූ තාර්කික විදිමත් වැඩපිළිවෙළ නිසාම විය යුතු ය."
+        ],
+        "actions": [
+          {
+            "label": "Watch on YouTube",
+            "href": "https://youtube.com/@mr.mathsscience?si=Cu79QMaZlRZx6bX3",
+            "primary": true
+          },
+          {
+            "label": "Join a class",
+            "href": "/classes",
+            "primary": false
+          }
+        ]
+      },
+      "teacher": {
+        "name": "NexvoLearn Instructor",
+        "alternateName": "NexvoLearn Instructor",
+        "role": "Educator, Founder of NexvoLearn",
+        "image": "/images/About.jpg",
+        "sectionHeading": "අපේ ගුරුතුමා",
+        "pills": [
+          "NexvoLearn Instructor",
+          "NexvoLearn",
+          "Engineering UOR UG",
+          "Maths + Science"
+        ],
+        "socials": [
+          {
+            "name": "YouTube",
+            "url": "https://youtube.com/@mr.mathsscience?si=Cu79QMaZlRZx6bX3"
+          },
+          {
+            "name": "Facebook",
+            "url": "https://web.facebook.com/p/Mr-MathsScience-NexvoLearn-Nallaperuma-61572265718089"
+          },
+          {
+            "name": "Email",
+            "url": "mailto:info@mrmathsscience.lk"
+          }
+        ]
+      },
+      "results": {
+        "heading": "පළමු Batch එකෙන්ම අපි දාපු Result එක",
+        "eyebrow": "O/L Results",
+        "image": "/images/test.jpg",
+        "description": "Ordinary Level Maths and Science classes with structured online learning, quizzes, progress tracking, and a clear path to A grades."
+      },
+      "quote": {
+        "text": "Maths and Science are not hard when they are explained with logic, structure, and the right questions.",
+        "subText": "My goal with NexvoLearn is to build a class where students actually enjoy thinking — and exam marks become a natural outcome of that process."
+      },
+      "education": {
+        "heading": "Education and Academic Background",
+        "eyebrow": "Background",
+        "description": "The formal journey behind how I teach Maths and Science with both theory and real-world context.",
+        "image": "/images/ruhuna.png",
+        "timeline": [
+          {
+            "title": "BSc (Hons) in Engineering — Undergraduate",
+            "subtitle": "Faculty of Engineering, University of Ruhuna",
+            "right": "UOR UG"
+          },
+          {
+            "title": "Attorney-at-Law (Reading)",
+            "subtitle": "Sri Lanka Law College",
+            "right": "Law (R)"
+          },
+          {
+            "title": "GCE A/L in Mathematics",
+            "subtitle": "Thurstan College, Colombo 07",
+            "right": "A/L 2021"
+          },
+          {
+            "title": "NexvoLearn tuition at Kelaniya",
+            "subtitle": "Structured theory, quizzes, and exam-focused practice",
+            "right": "Ongoing"
+          },
+          {
+            "title": "NexvoLearn YouTube and online classes",
+            "subtitle": "Online platform for Sri Lankan students (Grades 6–O/L)",
+            "right": "Ongoing"
+          }
+        ]
+      },
+      "features": {
+        "heading": "What students get in NexvoLearn",
+        "eyebrow": "Class experience",
+        "description": "Everything is designed around clarity, repetition with variation, and building genuine confidence for exams.",
+        "cards": [
+          {
+            "title": "Main subjects",
+            "items": [
+              "Mathematics",
+              "Science",
+              "Ordinary Level"
+            ]
+          },
+          {
+            "title": "Outcomes",
+            "items": [
+              "Exam strategy",
+              "Strong reasoning",
+              "Confidence in problems"
+            ]
+          },
+          {
+            "title": "Learning features",
+            "items": [
+              "Quizzes",
+              "Short videos",
+              "Revision sheets",
+              "Progress tracking"
+            ]
+          },
+          {
+            "title": "Teaching style",
+            "items": [
+              "Concept → Example → Practice",
+              "Logic-based explanation",
+              "Exam-focused drill"
+            ]
+          }
+        ],
+        "footer": "Each class follows a clear sequence: concept, worked example, targeted questions, and timed exam-style practice aligned to the Sri Lankan syllabus."
+      },
+      "stats": {
+        "heading": "NexvoLearn in numbers",
+        "eyebrow": "Impact",
+        "description": "Structured around focused groups, repeatable systems, and measurable progress.",
+        "items": [
+          {
+            "value": "A/L 2021",
+            "label": "First batch with record results"
+          },
+          {
+            "value": "Focused groups",
+            "label": "Small groups for deeper discussion"
+          },
+          {
+            "value": "Quizzes + videos",
+            "label": "Content built for active learning"
+          },
+          {
+            "value": "Result-driven",
+            "label": "Theory, past papers, structured practice"
+          }
+        ]
+      }
+    },
+    "dashboard": {
+      "metadata": {
+        "title": "NexvoLearn | Student Dashboard – NexvoLearn Instructor",
+        "description": "Student dashboard for NexvoLearn online tuition by NexvoLearn Instructor. Access Maths and Science classes, quizzes, and performance tracking for Grades 6–O/L Sri Lankan students.",
+        "keywords": [
+          "NexvoLearn",
+          "Mr Maths Science",
+          "MathsScience Sri Lanka",
+          "MathsScience online",
+          "NexvoLearn Instructor",
+          "NexvoLearn Instructor",
+          "Nallaperuma",
+          "Maths classes",
+          "Science tuition",
+          "Grade 6",
+          "Grade 7",
+          "Grade 8",
+          "Grade 9",
+          "Grade 10",
+          "Grade 11",
+          "O/L Maths",
+          "O/L Science",
+          "online maths classes",
+          "online science classes",
+          "ගණිතය",
+          "විද්‍යාව",
+          "පන්ති",
+          "ඔන්ලයින් පන්ති",
+          "NexvoLearn Maths class",
+          "NexvoLearn Science class",
+          "NexvoLearn classes",
+          "NexvoLearn online class",
+          "NexvoLearn Sri Lanka",
+          "NexvoLearn quizzes",
+          "NexvoLearn performance tracker"
+        ],
+        "ogImage": "https://www.nexvolearn.com/og/student-dashboard.jpg",
+        "url": "https://www.nexvolearn.com/dashboard"
+      },
+      "sections": {
+        "enrolled": {
+          "title": "My Enrolled Classes",
+          "description": "ඔබ සම්බන්ධ වී ඇති පන්ති"
+        },
+        "popular": {
+          "title": "Popular Classes",
+          "description": "හරිම විදිහට ඉගෙනගන්න දැන්ම සම්බන්ධ වන්​න"
+        },
+        "quizzes": {
+          "title": "All Quizzes Available",
+          "description": "දන්න දේ හරියටම හරිද බලන්න. Quiz එකක් කරන්​න"
+        }
+      },
+      "labels": {
+        "viewAll": "View All",
+        "exploreClasses": "Explore Classes",
+        "joinClass": "Join Class",
+        "viewClass": "View Class"
+      }
+    },
+    "classes": {
+      "metadata": {
+        "title": "NexvoLearn | Grade 6–O/L Maths & Science Classes by NexvoLearn Instructor",
+        "description": "Join NexvoLearn online classes by NexvoLearn Instructor. Maths and Science tuition for Grades 6–11 and O/L students in Sri Lanka with recordings, quizzes, and performance tracking.",
+        "keywords": [
+          "NexvoLearn",
+          "Mr Maths Science",
+          "MathsScience Sri Lanka",
+          "MathsScience online",
+          "NexvoLearn Instructor",
+          "NexvoLearn Instructor",
+          "Nallaperuma",
+          "Maths classes",
+          "Science tuition",
+          "Grade 6",
+          "Grade 7",
+          "Grade 8",
+          "Grade 9",
+          "Grade 10",
+          "Grade 11",
+          "O/L Maths",
+          "O/L Science",
+          "Grade 6 maths",
+          "Grade 6 science",
+          "Grade 7 maths",
+          "Grade 7 science",
+          "Grade 8 maths",
+          "Grade 8 science",
+          "Grade 9 maths",
+          "Grade 9 science",
+          "Grade 10 maths",
+          "Grade 10 science",
+          "Grade 11 maths",
+          "Grade 11 science",
+          "O/L maths online",
+          "O/L science online",
+          "6 ශ්‍රේණිය ගණිතය",
+          "6 ශ්‍රේණිය විද්‍යාව",
+          "7 ශ්‍රේණිය ගණිතය",
+          "7 ශ්‍රේණිය විද්‍යාව",
+          "8 ශ්‍රේණිය ගණිතය",
+          "8 ශ්‍රේණිය විද්‍යාව",
+          "9 ශ්‍රේණිය ගණිතය",
+          "9 ශ්‍රේණිය විද්‍යාව",
+          "10 ශ්‍රේණිය ගණිතය",
+          "10 ශ්‍රේණිය විද්‍යාව",
+          "11 ශ්‍රේණිය ගණිතය",
+          "11 ශ්‍රේණිය විද්‍යාව"
+        ],
+        "ogImage": "https://www.nexvolearn.com/og/main.jpg",
+        "url": "https://www.nexvolearn.com/classes"
+      },
+      "header": {
+        "title": "Explore Available Classes",
+        "description": "විෂ​ය ශ්‍රේණීය බලා හරිම පන්තියට සම්බන්ධ වන්​න"
+      },
+      "filters": {
+        "view": {
+          "label": "View",
+          "all": "All Classes",
+          "enrolled": "My Enrolled Classes"
+        },
+        "subject": {
+          "label": "Subject",
+          "all": "All Subjects"
+        },
+        "grade": {
+          "label": "Grade",
+          "all": "All Grades"
+        }
+      },
+      "labels": {
+        "noClassesFound": "No classes found",
+        "adjustFilters": "Try adjusting your filters to see more classes.",
+        "viewAllClasses": "View all classes",
+        "joinClass": "Join Class"
+      }
+    },
+    "quizzes": {
+      "metadata": {
+        "title": "NexvoLearn | Quizzes & Online Tests – NexvoLearn Instructor",
+        "description": "Free and structured Maths & Science quizzes by NexvoLearn Instructor – NexvoLearn. Practice questions for Grades 6 to O/L, with instant feedback and performance tracking for Sri Lankan students.",
+        "keywords": [
+          "NexvoLearn",
+          "Mr Maths Science",
+          "MathsScience",
+          "MathzScience",
+          "NexvoLearn Instructor",
+          "NexvoLearn Instructor",
+          "Nallaperuma",
+          "Maths quiz",
+          "Science quiz",
+          "Grade 6 quiz",
+          "Grade 7 quiz",
+          "Grade 8 quiz",
+          "Grade 9 quiz",
+          "Grade 10 quiz",
+          "Grade 11 quiz",
+          "O/L Maths quiz",
+          "O/L Science quiz",
+          "online quiz",
+          "Sri Lanka quizzes",
+          "විද්‍යාව quiz",
+          "ගණිතය quiz",
+          "පන්ති quiz",
+          "ඔන්ලයින් විභාග",
+          "NexvoLearn Maths quiz",
+          "NexvoLearn Science quiz",
+          "NexvoLearn online quiz",
+          "MathsScience Sri Lanka"
+        ],
+        "ogImage": "https://www.nexvolearn.com/og/quizzes.jpg",
+        "url": "https://www.nexvolearn.com/quizzes"
+      },
+      "header": {
+        "title": "Available Quizzes",
+        "description": "ශ්‍රේණීය වි​ෂය හොදින් බලා Quiz එක තෝරගන්​න."
+      },
+      "filters": {
+        "subject": {
+          "label": "Subject",
+          "all": "All Subjects"
+        },
+        "grade": {
+          "label": "Grade",
+          "all": "All Grades"
+        }
+      },
+      "challenges": {
+        "title": "Your Challenges"
+      },
+      "all": {
+        "title": "All Quizzes Available"
+      },
+      "labels": {
+        "pendingInvites": "Pending Invites",
+        "opponentInvites": "Opponent Invites",
+        "winRate": "Win Rate",
+        "pendingInvitesTitle": "Pending Invites (to you)",
+        "opponentInvitesTitle": "Opponent Invites (you invited)",
+        "noMatches": "No matches found.",
+        "play": "Play",
+        "winRateHistory": "Win Rate History",
+        "close": "Close",
+        "loading": "Loading…",
+        "noCompletedChallenges": "No completed challenges yet.",
+        "win": "Win",
+        "loss": "Loss",
+        "tie": "Tie",
+        "noQuizzes": "No quizzes available."
+      }
+    },
+    "performance": {
+      "metadata": {
+        "title": "Performance | NexvoLearn",
+        "description": "Track your progress and performance in Maths and Science quizzes.",
+        "keywords": [
+          "Performance",
+          "Progress",
+          "Maths",
+          "Science",
+          "Quizzes"
+        ],
+        "url": "https://www.nexvolearn.com/quizzes/performance",
+        "ogImage": "https://www.nexvolearn.com/og/main.jpg"
+      },
+      "header": {
+        "title": "Learning Intelligence Hub",
+        "descriptionAdmin": "Advanced analytics and insights for educational excellence",
+        "descriptionStudent": "Your personalized learning analytics and progress insights",
+        "analysisTitle": "Performance Analysis"
+      },
+      "sections": {
+        "trend": "Performance Trend",
+        "students": "Student Performance",
+        "difficulty": "Paper Difficulty (Lowest Average Scores)"
+      }
+    },
+    "auth": {
+      "login": {
+        "title": "Welcome Back",
+        "description": "Enter your email or mobile number and password to access your account",
+        "labels": {
+          "identifier": "Email or Mobile Number",
+          "password": "Password",
+          "submit": "Login",
+          "submitting": "Logging in...",
+          "noAccount": "Don't have an account?",
+          "registerLink": "Register"
+        },
+        "image": "/images/sw1.png"
+      },
+      "register": {
+        "title": "Register",
+        "description": {
+          "step0": "Create your account",
+          "step1": "Tell us more about yourself",
+          "step2": "Your academic details",
+          "otp": "Enter the OTP sent to your email"
+        },
+        "labels": {
+          "name": "Name",
+          "email": "Email",
+          "password": "Password",
+          "birthDate": "Birth Date",
+          "school": "School",
+          "phone": "Phone",
+          "grade": "Grade",
+          "olYear": "O/L Year",
+          "alYear": "A/L Year",
+          "otp": "Enter OTP",
+          "next": "Next",
+          "previous": "Previous",
+          "sendOtp": "Send OTP",
+          "verify": "Verify & Complete",
+          "verifying": "Verifying...",
+          "resend": "Resend OTP",
+          "resendIn": "Resend in {seconds}s",
+          "alreadyAccount": "Already have an account?",
+          "loginLink": "Login",
+          "loading": "Loading..."
+        },
+        "image": "/images/sw1.png"
+      }
+    }
   }
 }

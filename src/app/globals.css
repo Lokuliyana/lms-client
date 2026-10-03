@@ -1,102 +1,113 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-
-  --shadow-soft-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
-  --shadow-soft: 0 2px 4px -1px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
-  --shadow-soft-md: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 10px 24px -3px rgba(15, 23, 42, 0.05);
-  --shadow-soft-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.04), 0 20px 32px -4px rgba(15, 23, 42, 0.06);
-  --shadow-glow: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 4px 14px 0 rgba(37, 99, 235, 0.12);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind screens;
 
 :root {
-  --background: hsl(210, 40%, 98%);
-  --foreground: hsl(222, 47%, 11%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(222, 47%, 11%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(222, 47%, 11%);
-  --primary: hsl(221, 83%, 53%);
-  --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 20%, 97%);
-  --secondary-foreground: hsl(222, 47%, 11%);
-  --muted: hsl(210, 20%, 97%);
-  --muted-foreground: hsl(215, 16%, 47%);
-  --accent: hsl(214, 100%, 97%);
-  --accent-foreground: hsl(221, 83%, 53%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(214, 32%, 91%);
-  --input: hsl(214, 32%, 91%);
-  --ring: hsl(221, 83%, 53%);
-  --radius: 0.75rem;
+  --primary: #4f46e5;
+  --primary-color: #4f46e5;
+  --primary-rgb: 79 70 229;
+  --primary-foreground: #ffffff;
+  --primary-hover: #4338ca;
+  --ring: #4f46e5;
+  --accent: #06b6d4;
+  --accent-color: #06b6d4;
+  --accent-rgb: 6 182 212;
+  --accent-foreground: #ffffff;
 }
 
-.dark {
-  --background: hsl(222, 47%, 11%);
-  --foreground: hsl(210, 40%, 98%);
-  --card: hsl(222, 47%, 11%);
-  --card-foreground: hsl(210, 40%, 98%);
-  --popover: hsl(222, 47%, 11%);
-  --popover-foreground: hsl(210, 40%, 98%);
-  --primary: hsl(217.2, 91.2%, 59.8%);
-  --primary-foreground: hsl(222.2, 47.4%, 11.2%);
-  --secondary: hsl(217.2, 32.6%, 17.5%);
-  --secondary-foreground: hsl(210, 40%, 98%);
-  --muted: hsl(217.2, 32.6%, 17.5%);
-  --muted-foreground: hsl(215, 20.2%, 65.1%);
-  --accent: hsl(217.2, 32.6%, 17.5%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --border: hsl(217.2, 32.6%, 17.5%);
-  --input: hsl(217.2, 32.6%, 17.5%);
-  --ring: hsl(224.3, 76.3%, 48%);
+/* Custom Fonts */
+@font-face {
+  font-family: 'FM Abhaya';
+  src: url('/fonts/FM-Aba-Bold-i63q08.ttf') format('truetype');
+  font-weight: bold;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+@font-face {
+  font-family: 'FM Emanee';
+  src: url('/fonts/FM-Emanee-ov9nk3.ttf') format('truetype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'FM Rashmee';
+  src: url('/fonts/FMRashmee-jdq2pc.ttf') format('truetype');
+  font-weight: normal;
+}
+
+/* Optional Global Font */
+html {
+  font-family: 'Noto Sans Sinhala', sans-serif;
+}
+
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
   }
-  body {
-    @apply bg-background text-foreground;
+  33% {
+    transform: translate(30px, -20px) scale(1.1);
   }
-  html {
-    @apply font-sans;
+  66% {
+    transform: translate(-20px, 30px) scale(0.9);
   }
 }
+
+.animate-blob-1 {
+  animation: blob 18s infinite;
+}
+.animate-blob-2 {
+  animation: blob 22s infinite;
+}
+
+/* Quill Rich Text Styles */
+.ql-align-center { text-align: center; }
+.ql-align-right { text-align: right; }
+.ql-align-justify { text-align: justify; }
+
+.ql-indent-1 { padding-left: 3em; }
+.ql-indent-2 { padding-left: 6em; }
+.ql-indent-3 { padding-left: 9em; }
+.ql-indent-4 { padding-left: 12em; }
+.ql-indent-5 { padding-left: 15em; }
+.ql-indent-6 { padding-left: 18em; }
+.ql-indent-7 { padding-left: 21em; }
+.ql-indent-8 { padding-left: 24em; }
+
+.ql-code-block-container {
+    background-color: #f1f5f9;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    margin-bottom: 1rem;
+}
+
+/* Hide Quill's internal UI elements */
+.ql-ui { display: none !important; }
+
+/* Fix list styling for Quill content */
+li[data-list="ordered"] {
+    list-style-type: upper-alpha !important; /* Enforce A, B, C */
+}
+
+li[data-list="bullet"] {
+    list-style-type: disc !important;
+}
+
+/* Ensure lists have proper spacing */
+.prose ol, .prose ul {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+/* Specific fix for the provided HTML structure where li has data-list */
+ol > li[data-list="ordered"] {
+    list-style-type: upper-alpha !important;
+}
+
+/* Mobile Safe Area Padding */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+

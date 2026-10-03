@@ -1,13 +1,32 @@
-export default function HomePage() {
-  return (
-    <div className="bg-white border border-slate-200/70 rounded-2xl p-6 shadow-[0_2px_4px_-1px_rgba(15,23,42,0.04),0_4px_12px_-2px_rgba(15,23,42,0.03)] hover:shadow-[0_4px_6px_-1px_rgba(15,23,42,0.04),0_10px_24px_-3px_rgba(15,23,42,0.05)] hover:border-slate-300/80 transition-all duration-200 ease-out">
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-        <h3 className="text-base font-semibold text-slate-800 tracking-tight">Welcome</h3>
-        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">Dashboard</span>
-      </div>
-      <div>
-        <p className="text-slate-600">The LMS Engine is initialized. Please use the sidebar to navigate through the modules.</p>
-      </div>
-    </div>
-  );
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+async function getUserSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${process.env.API_ORIGIN || "http://127.0.0.1:4002/api"}/auth/profile`, {
+      headers: { Cookie: `token=${token}` },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export default async function Home() {
+  const session = await getUserSession();
+
+  if (session && session.data) {
+    const role = session.data.role || "";
+    const isTeacher = role === "teacher" || role === "admin";
+    if (isTeacher) {
+      redirect("/admin/dashboard");
+    }
+  }
+
+  redirect("/dashboard");
 }
