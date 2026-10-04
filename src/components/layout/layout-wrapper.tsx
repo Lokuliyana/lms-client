@@ -42,7 +42,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNav = isAuthScreen || isFocusArena;
 
   return (
-    <div className="relative min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
+    <div
+      suppressHydrationWarning
+      className="relative min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden"
+    >
       <ReLoginDialog />
       <Toaster />
 

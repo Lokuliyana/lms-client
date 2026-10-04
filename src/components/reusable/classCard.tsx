@@ -227,15 +227,6 @@ export const ClassCard: FC<ClassCardProps> = ({
     return getSubjectPastelTheme(rawSubjectString);
   }, [rawSubjectString]);
 
-  const displayClassId = useMemo(() => {
-    if (classId !== undefined && classId !== null && String(classId).trim() !== "") {
-      return String(classId).trim();
-    }
-    if (!id) return "";
-    const clean = String(id).trim();
-    if (clean.length <= 4) return clean;
-    return clean.slice(-4).toUpperCase();
-  }, [classId, id]);
 
   const displayTeacherName = useMemo(() => {
     if (teacherName) return teacherName;
@@ -575,16 +566,21 @@ export const ClassCard: FC<ClassCardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent pointer-events-none" />
         )}
 
-        {/* Top Badges: Left (Subject + Grade) & Right (Class ID + Fee) */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between z-10 gap-2 pointer-events-none">
-          {/* Left: Subject & Grade Pills */}
-          <div className="flex flex-wrap items-center gap-1 max-w-[60%]">
+        {/* Top Badges: Left (Grade & Subject) & Right (Status & Fee) */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 gap-2 pointer-events-none">
+          {/* Left: Grade & Subject Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 max-w-[65%]">
+            {gradeLabel && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold text-indigo-800 bg-white/95 backdrop-blur-md border border-indigo-100 shadow-2xs">
+                {gradeLabel.value}
+              </span>
+            )}
             {subjectLabels.length > 0 ? (
               subjectLabels.map((label, i) => (
                 <span
                   key={i}
                   className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md border shadow-2xs",
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md border shadow-2xs",
                     pastelTheme.badge
                   )}
                 >
@@ -595,7 +591,7 @@ export const ClassCard: FC<ClassCardProps> = ({
             ) : (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md border shadow-2xs capitalize",
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur-md border shadow-2xs capitalize",
                   pastelTheme.badge
                 )}
               >
@@ -603,35 +599,24 @@ export const ClassCard: FC<ClassCardProps> = ({
                 {pastelTheme.name === "default" ? "General" : pastelTheme.name}
               </span>
             )}
-            {gradeLabel && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-indigo-700 bg-indigo-50/95 border border-indigo-200/80 shadow-2xs backdrop-blur-md">
-                {gradeLabel.value}
-              </span>
-            )}
           </div>
 
-          {/* Right: Class ID & Fee Pills */}
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <div className="flex items-center gap-1">
-              {displayClassId && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-800 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xs">
-                  ID: {displayClassId}
-                </span>
-              )}
-              {isEnrolled && (
-                <span
-                  className={cn(
-                    "inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold text-white shadow-2xs backdrop-blur-md",
-                    hasAccessThisMonth ? "bg-emerald-600/90" : "bg-amber-500/90"
-                  )}
-                >
-                  {hasAccessThisMonth ? "Active" : "Due"}
-                </span>
-              )}
-            </div>
+          {/* Right: Enrolled Status & Fee Pill */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {isEnrolled && (
+              <span
+                className={cn(
+                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white shadow-2xs backdrop-blur-md",
+                  hasAccessThisMonth ? "bg-emerald-600/90" : "bg-amber-500/90"
+                )}
+              >
+                {hasAccessThisMonth ? "Active" : "Due"}
+              </span>
+            )}
             {resolvedFee && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-800 bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-2xs">
-                Rs. {formatLKR(resolvedFee)}
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xs">
+                <span className="text-[10px] font-semibold text-slate-500">Rs.</span>
+                <span className="font-extrabold text-slate-900">{formatLKR(resolvedFee)}</span>
               </span>
             )}
           </div>
