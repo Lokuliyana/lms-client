@@ -26,8 +26,16 @@ Command.displayName = CommandPrimitive.displayName
 const CommandDialog = ({ children, ...props }: DialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-200/90 max-w-xl">
-        <Command className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-400 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-4 [&_[cmdk-input-wrapper]_svg]:w-4 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:py-2.5 [&_[cmdk-item]_svg]:h-4 [&_[cmdk-item]_svg]:w-4">
+      <DialogContent
+        hideClose
+        variant="bare"
+        className="overflow-hidden p-0 rounded-3xl border-2 border-indigo-200/80 bg-white/95 backdrop-blur-md shadow-2xl max-w-2xl w-[95vw] sm:w-[620px] mx-auto"
+        style={{
+          boxShadow:
+            "0 25px 60px -15px rgba(79, 70, 229, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95)",
+        }}
+      >
+        <Command className="bg-transparent text-slate-900">
           {children}
         </Command>
       </DialogContent>
@@ -39,12 +47,14 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-slate-100 px-4 py-1" cmdk-input-wrapper="">
-    <Search className="mr-2.5 h-4 w-4 shrink-0 text-slate-400" />
+  <div className="flex items-center border-b border-indigo-100/80 px-4 py-2.5 bg-gradient-to-r from-violet-50/40 via-white to-indigo-50/30" cmdk-input-wrapper="">
+    <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0 mr-3">
+      <Search className="h-4 w-4 shrink-0 text-indigo-600" />
+    </div>
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-11 w-full rounded-md bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-10 w-full rounded-md bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -60,7 +70,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[340px] overflow-y-auto overflow-x-hidden p-2 space-y-1", className)}
+    className={cn("max-h-[420px] overflow-y-auto overflow-x-hidden p-2.5 space-y-1.5 scrollbar-thin", className)}
     {...props}
   />
 ))
@@ -87,7 +97,7 @@ const CommandGroup = React.forwardRef<
   <CommandPrimitive.Group
     ref={ref}
     className={cn(
-      "overflow-hidden p-1 text-slate-900 [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:text-slate-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider",
+      "overflow-hidden p-1 text-slate-900 [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-900/60 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider",
       className
     )}
     {...props}
@@ -102,7 +112,7 @@ const CommandSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-slate-100", className)}
+    className={cn("-mx-1 my-1.5 h-px bg-indigo-100/60", className)}
     {...props}
   />
 ))
@@ -115,7 +125,10 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer gap-2.5 select-none items-center rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none data-[disabled=true]:pointer-events-none data-[selected='true']:bg-indigo-50/80 data-[selected=true]:text-indigo-900 data-[selected='true']:font-semibold data-[disabled=true]:opacity-50 transition-colors [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      "relative flex cursor-pointer gap-2.5 select-none items-center rounded-2xl px-3 py-2 text-xs font-medium text-slate-700 outline-none",
+      "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-all duration-150",
+      "data-[selected='true']:bg-gradient-to-r data-[selected='true']:from-indigo-50 data-[selected='true']:via-purple-50/70 data-[selected='true']:to-indigo-50/50",
+      "data-[selected='true']:text-indigo-950 data-[selected='true']:border data-[selected='true']:border-indigo-200/70 data-[selected='true']:shadow-2xs",
       className
     )}
     {...props}
