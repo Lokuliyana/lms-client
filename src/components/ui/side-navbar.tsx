@@ -14,6 +14,7 @@ import {
   Settings,
   Plus,
   Video,
+  LayoutDashboard,
   ChevronDown,
   Edit2,
   Eye,
@@ -59,12 +60,12 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
   const quickActionRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
 
-  // Accordion state
+  // Accordion state: For staff/teachers, primary core sections stay open, others collapse by default
   const [academicOpen, setAcademicOpen] = useState(true);
-  const [assessmentsOpen, setAssessmentsOpen] = useState(true);
-  const [operationsOpen, setOperationsOpen] = useState(true);
-  const [commerceOpen, setCommerceOpen] = useState(true);
-  const [adminOpen, setAdminOpen] = useState(true);
+  const [assessmentsOpen, setAssessmentsOpen] = useState(!isStaff);
+  const [operationsOpen, setOperationsOpen] = useState(false);
+  const [commerceOpen, setCommerceOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [gradesOpen, setGradesOpen] = useState(false);
   const [subjectsOpen, setSubjectsOpen] = useState(false);
 
@@ -346,8 +347,58 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
 
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
+        {/* UNIVERSAL TOP SECTION: DASHBOARD & ABOUT PLATFORM */}
+        <div className="space-y-1 pb-1">
+          <ul className="space-y-0.5">
+            <li>
+              <Link
+                href="/dashboard"
+                onClick={() => onCloseMobile?.()}
+                className={cn(
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
+                  pathname === "/dashboard"
+                    ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                )}
+              >
+                <LayoutDashboard
+                  className={cn(
+                    "w-4 h-4 transition-colors",
+                    pathname === "/dashboard"
+                      ? "text-indigo-600"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  )}
+                />
+                <span className="flex-1 truncate">Dashboard</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/about"
+                onClick={() => onCloseMobile?.()}
+                className={cn(
+                  "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
+                  pathname === "/about"
+                    ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                )}
+              >
+                <Info
+                  className={cn(
+                    "w-4 h-4 transition-colors",
+                    pathname === "/about"
+                      ? "text-indigo-600"
+                      : "text-slate-400 group-hover:text-slate-600"
+                  )}
+                />
+                <span className="flex-1 truncate">About Academy</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
+
         {/* GROUP 1: ACADEMIC HUB */}
-        <div className="space-y-1">
+        <div className="space-y-1 pt-1 border-t border-black/5">
           <button
             type="button"
             onClick={() => setAcademicOpen((o) => !o)}

@@ -46,10 +46,14 @@ export default function HeroMarketing({ isGuest, displayName }: Props) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="relative isolate overflow-hidden rounded-3xl border border-amber-200/70 bg-gradient-to-br from-white via-[#FFFDFB] to-[#FFF9F2] p-6 md:p-8 lg:p-10 shadow-xs"
+      className="relative isolate overflow-hidden rounded-3xl border-2 border-indigo-200/60 bg-gradient-to-br from-violet-50/95 via-purple-50/70 to-indigo-100/90 p-6 md:p-8 lg:p-10 shadow-lg"
+      style={{
+        boxShadow: '0 16px 40px -8px rgba(99, 102, 241, 0.16), 0 4px 16px -2px rgba(168, 85, 247, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+      }}
     >
-      {/* Subtle Background Mesh */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-100/40 via-rose-50/20 to-transparent" />
+      {/* Subtle Purple & Blue Ambient Mesh */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-200/50 via-indigo-100/30 to-transparent" />
+      <div className="pointer-events-none absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-blue-300/25 blur-3xl" />
 
       {/* Bento Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -57,8 +61,8 @@ export default function HeroMarketing({ isGuest, displayName }: Props) {
         <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             {/* Credibility Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/90 bg-amber-50/90 px-3.5 py-1 text-xs font-semibold text-amber-800 shadow-2xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/90 bg-white/90 px-3.5 py-1 text-xs font-semibold text-indigo-900 shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
               <span>
                 {heroHighlight1} {heroHighlight2}
               </span>
@@ -67,7 +71,7 @@ export default function HeroMarketing({ isGuest, displayName }: Props) {
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
               Master STEM & Exam Excellence with{" "}
-              <span className="bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 {teacherName}
               </span>
             </h1>

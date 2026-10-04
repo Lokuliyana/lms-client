@@ -96,57 +96,51 @@ export default function StudentDashboard() {
       </Head>
 
       <div className="space-y-8 sm:space-y-9">
-        {/* Clay Hero Banner & Compact Stats for Students & Guests */}
-        <div className="space-y-4">
-          <ClayHeroBanner
-            title={
-              isGuest
-                ? "Welcome to eLift Academy! ✨"
-                : `Welcome back, ${displayName || "Scholar"}! ✨`
-            }
-            description={
-              isGuest
-                ? "Experience interactive STEM education, real-time quizzes, scheduled live classes, and official study materials."
-                : "Track your enrolled classes, scheduled live sessions, and interactive quizzes."
-            }
-            badge={isGuest ? "Interactive Learning Hub" : "Student Portal"}
-            mascotSrc={CLAY_ASSETS.bannerStudentSaturn}
-            cta={{
-              label: isGuest ? "Explore Classes" : "Browse Classes",
-              href: "/classes",
-            }}
-            secondaryCta={{
-              label: isGuest ? "Try Quizzes" : "Take Quiz",
-              href: "/quizzes",
-            }}
-          />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <CompactStatCard
-              label={isGuest ? "Live Classes" : "Enrolled Classes"}
-              value={isGuest ? (classes.length > 0 ? classes.length : "12+") : enrolledClasses.length}
-              status="emerald"
-              href={isGuest ? "/classes" : "/classes?view=enrolled"}
+        {/* Clay Hero Banner & Compact Stats for Logged-In Students */}
+        {!isGuest && (
+          <div className="space-y-4">
+            <ClayHeroBanner
+              title={`Welcome back, ${displayName || "Scholar"}! ✨`}
+              description="Track your enrolled classes, scheduled live sessions, and interactive quizzes."
+              badge="Student Portal"
+              mascotSrc={CLAY_ASSETS.bannerStudentSaturn}
+              cta={{
+                label: "Browse Classes",
+                href: "/classes",
+              }}
+              secondaryCta={{
+                label: "Take Quiz",
+                href: "/quizzes",
+              }}
             />
-            <CompactStatCard
-              label="Catalog Courses"
-              value={classes.length > 0 ? classes.length : "Explore"}
-              status="blue"
-              href="/classes"
-            />
-            <CompactStatCard
-              label="Available Quizzes"
-              value={quizzes.length > 0 ? quizzes.length : "Ready"}
-              status="purple"
-              href="/quizzes"
-            />
-            <CompactStatCard
-              label={isGuest ? "Direct Delivery" : "My Deliveries"}
-              value={isGuest ? "Islandwide" : "Track"}
-              status="amber"
-              href={isGuest ? "/store" : "/dashboard/deliveries"}
-            />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <CompactStatCard
+                label="Enrolled Classes"
+                value={enrolledClasses.length}
+                status="emerald"
+                href="/classes?view=enrolled"
+              />
+              <CompactStatCard
+                label="Catalog Courses"
+                value={classes.length > 0 ? classes.length : "Explore"}
+                status="blue"
+                href="/classes"
+              />
+              <CompactStatCard
+                label="Available Quizzes"
+                value={quizzes.length > 0 ? quizzes.length : "Ready"}
+                status="purple"
+                href="/quizzes"
+              />
+              <CompactStatCard
+                label="My Deliveries"
+                value="Track"
+                status="amber"
+                href="/dashboard/deliveries"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Marketing Hero (Only for guest visitors on /dashboard) */}
         {isGuest && <HeroMarketing isGuest={isGuest} displayName={displayName} />}
