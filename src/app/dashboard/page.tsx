@@ -38,6 +38,12 @@ export default function StudentDashboard() {
     if (authLoading) return;
 
     if (user) {
+      const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator";
+      if (isStaff) {
+        router.replace("/admin/dashboard");
+        return;
+      }
+
       setIsGuest(false);
       setDisplayName(
         user?.full_name ||

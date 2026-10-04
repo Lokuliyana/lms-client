@@ -352,11 +352,11 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           <ul className="space-y-0.5">
             <li>
               <Link
-                href="/dashboard"
+                href={isStaff ? "/admin/dashboard" : "/dashboard"}
                 onClick={() => onCloseMobile?.()}
                 className={cn(
                   "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
-                  pathname === "/dashboard"
+                  (pathname === "/dashboard" || pathname === "/admin/dashboard")
                     ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                 )}
@@ -364,7 +364,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                 <LayoutDashboard
                   className={cn(
                     "w-4 h-4 transition-colors",
-                    pathname === "/dashboard"
+                    (pathname === "/dashboard" || pathname === "/admin/dashboard")
                       ? "text-indigo-600"
                       : "text-slate-400 group-hover:text-slate-600"
                   )}

@@ -37,6 +37,7 @@ export function Topbar({
   const { user, isTeacher, isStudent, hasPermission, logout } = useAuth();
   const { branding } = useBranding();
   const canManageBranding = !isStudent && hasPermission("branding.manage");
+  const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator" || Boolean(isTeacher);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -101,15 +102,16 @@ export function Topbar({
         </div>
 
         {/* Center: Client's Branding / Platform Logo */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 pointer-events-auto">
+        <div suppressHydrationWarning className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 pointer-events-auto">
           {branding.assets?.logoUrl ? (
             <img
+              suppressHydrationWarning
               src={branding.assets.logoUrl}
               alt={branding.platformName || "Client Logo"}
               className="h-7 sm:h-8 w-auto object-contain max-h-9"
             />
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full border shadow-sm" style={{ background: 'rgba(255,255,255,0.85)', borderColor: 'rgba(0,0,0,0.07)', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}>
+            <div suppressHydrationWarning className="flex items-center gap-2 px-3 py-1 rounded-full border shadow-sm" style={{ background: 'rgba(255,255,255,0.85)', borderColor: 'rgba(0,0,0,0.07)', boxShadow: '0 4px 14px rgba(0,0,0,0.04)' }}>
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
               <span className="text-xs font-bold tracking-tight text-slate-800 truncate max-w-[140px] sm:max-w-[220px]">
                 {branding.platformName || "Nexvo Learn"}
@@ -214,7 +216,7 @@ export function Topbar({
                       Customization Engine
                     </Link>
                   )}
-                  {isTeacher && !isStudent && (
+                  {isStaff && !isStudent && (
                     <Link
                       href="/admin/dashboard"
                       onClick={() => setProfileOpen(false)}

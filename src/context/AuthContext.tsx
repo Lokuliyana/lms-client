@@ -73,8 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoginModalOpen(false);
 
       if (pathname === '/login' || pathname === '/') {
-        if (user.role === "teacher" ) router.push("/admin/dashboard");
-        else router.push("/dashboard");
+        if (user.role === "teacher" || user.role === "admin" || user.role === "moderator") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } finally {
       setLoading(false);

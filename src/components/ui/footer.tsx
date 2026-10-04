@@ -19,24 +19,25 @@ export default function Footer() {
     : footer.social.whatsapp.url;
 
   return (
-    <footer className="mt-16 border-t border-slate-200/70 bg-gradient-to-b from-white to-slate-50">
+    <footer suppressHydrationWarning className="mt-16 border-t border-slate-200/70 bg-gradient-to-b from-white to-slate-50">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-14">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
-          <div>
-            <div className="relative w-56 h-24 mb-3">
+          <div suppressHydrationWarning>
+            <div suppressHydrationWarning className="relative w-56 h-24 mb-3">
               <Image
+                suppressHydrationWarning
                 src={branding.assets?.logoUrl || footer.brand.logo}
-                alt={branding.platformName}
+                alt={branding.platformName || "NexvoLearn"}
                 fill
                 className="object-contain"
                 priority
               />
             </div>
-            <div className="text-sm text-slate-600 leading-relaxed max-w-xs">
+            <div suppressHydrationWarning className="text-sm text-slate-600 leading-relaxed max-w-xs">
               {branding.slogan || footer.brand.description}
             </div>
-            <div className="text-xs text-slate-500 font-medium mt-2">
+            <div suppressHydrationWarning className="text-xs text-slate-500 font-medium mt-2">
               Instructor: {branding.instructorName}
             </div>
           </div>

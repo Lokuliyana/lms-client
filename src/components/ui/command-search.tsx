@@ -149,25 +149,26 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
     router.push(href);
   };
 
+  const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator" || Boolean(isTeacher);
   const showClasses = activeCategory === "all" || activeCategory === "classes";
   const showQuizzes = activeCategory === "all" || activeCategory === "quizzes";
   const showPages = activeCategory === "all" || activeCategory === "pages";
-  const showActions = (activeCategory === "all" || activeCategory === "actions") && isTeacher && !isStudent;
+  const showActions = (activeCategory === "all" || activeCategory === "actions") && isStaff && !isStudent;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search classes, subjects, quizzes, navigation..." />
 
       {/* Category Filter Chips Bar */}
-      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-indigo-100/70 bg-[#FAF9F5]/80 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-indigo-100/50 bg-[#FAF9F5]/70 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveCategory("all")}
           className={cn(
-            "px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0",
+            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
             activeCategory === "all"
-              ? "bg-indigo-600 text-white shadow-2xs [box-shadow:0_2px_8px_rgba(79,70,229,0.3)]"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+              ? "bg-indigo-600 text-white shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white"
           )}
         >
           All
@@ -176,10 +177,10 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
           type="button"
           onClick={() => setActiveCategory("classes")}
           className={cn(
-            "px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0",
+            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
             activeCategory === "classes"
-              ? "bg-indigo-600 text-white shadow-2xs [box-shadow:0_2px_8px_rgba(79,70,229,0.3)]"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+              ? "bg-indigo-600 text-white shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white"
           )}
         >
           Classes ({classList.length})
@@ -188,10 +189,10 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
           type="button"
           onClick={() => setActiveCategory("quizzes")}
           className={cn(
-            "px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0",
+            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
             activeCategory === "quizzes"
-              ? "bg-indigo-600 text-white shadow-2xs [box-shadow:0_2px_8px_rgba(79,70,229,0.3)]"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+              ? "bg-indigo-600 text-white shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white"
           )}
         >
           Quizzes ({quizList.length})
@@ -200,23 +201,23 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
           type="button"
           onClick={() => setActiveCategory("pages")}
           className={cn(
-            "px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0",
+            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
             activeCategory === "pages"
-              ? "bg-indigo-600 text-white shadow-2xs [box-shadow:0_2px_8px_rgba(79,70,229,0.3)]"
-              : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+              ? "bg-indigo-600 text-white shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 hover:bg-white"
           )}
         >
           Navigation
         </button>
-        {isTeacher && !isStudent && (
+        {isStaff && !isStudent && (
           <button
             type="button"
             onClick={() => setActiveCategory("actions")}
             className={cn(
-              "px-2.5 py-1 rounded-full text-[11px] font-bold transition-all shrink-0",
+              "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
               activeCategory === "actions"
-                ? "bg-indigo-600 text-white shadow-2xs [box-shadow:0_2px_8px_rgba(79,70,229,0.3)]"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/60"
+                ? "bg-indigo-600 text-white shadow-2xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white"
             )}
           >
             Staff Actions
@@ -275,37 +276,27 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                       <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
                         {titleStr}
                       </span>
-                      {teacherName && (
-                        <span className="text-[11px] text-slate-500 truncate">
-                          {teacherName}
-                        </span>
-                      )}
+                      <span className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                        {gr && <span className="font-semibold text-indigo-700">{gr}</span>}
+                        {gr && subj && <span>•</span>}
+                        {subj && <span>{subj}</span>}
+                        {teacherName && (
+                          <>
+                            <span>•</span>
+                            <span>{teacherName}</span>
+                          </>
+                        )}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                    {gr && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-indigo-900 border border-indigo-100/90 shadow-2xs">
-                        {gr}
-                      </span>
-                    )}
-                    {subj && (
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs",
-                          pastel.badge
-                        )}
-                      >
-                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", pastel.dotColor)} />
-                        {subj}
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2.5 shrink-0 ml-3">
                     {cls.monthly_fee && (
-                      <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold text-slate-800 bg-slate-100 border border-slate-200/80">
+                      <span className="text-xs font-bold text-slate-700">
                         Rs. {formatLKR(cls.monthly_fee)}
                       </span>
                     )}
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600 transition-colors ml-1" />
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600 transition-colors" />
                   </div>
                 </CommandItem>
               );
@@ -339,27 +330,16 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                         <span className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors truncate">
                           {titleStr}
                         </span>
-                        <span className="text-[11px] text-slate-500">
-                          {qCount} {qCount === 1 ? "Question" : "Questions"}
-                          {qz.subject ? ` • ${qz.subject}` : ""}
+                        <span className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                          <span>{qCount} {qCount === 1 ? "Question" : "Questions"}</span>
+                          {qz.subject && <span>• {qz.subject}</span>}
+                          {difficulty && <span className="font-semibold capitalize text-amber-700">• {difficulty}</span>}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs uppercase tracking-wide",
-                          difficulty.includes("hard")
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : difficulty.includes("medium")
-                            ? "bg-amber-50 text-amber-700 border-amber-200"
-                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        )}
-                      >
-                        {difficulty}
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-600 transition-colors ml-1" />
+                    <div className="flex items-center gap-2.5 shrink-0 ml-3">
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-600 transition-colors" />
                     </div>
                   </CommandItem>
                 );
@@ -375,7 +355,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
             <CommandGroup heading="Platform Navigation">
               <CommandItem
                 value="dashboard home student portal overview"
-                onSelect={() => handleSelect(isTeacher ? "/admin/dashboard" : "/dashboard")}
+                onSelect={() => handleSelect(isStaff ? "/admin/dashboard" : "/dashboard")}
                 className="group py-2.5 px-3 rounded-2xl"
               >
                 <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/70 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs mr-1">

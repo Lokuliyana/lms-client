@@ -15,7 +15,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
+      "flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white text-slate-900 border-0 outline-none",
       className
     )}
     {...props}
@@ -29,7 +29,7 @@ const CommandDialog = ({ children, ...props }: DialogProps) => {
       <DialogContent
         hideClose
         variant="bare"
-        className="overflow-hidden p-0 rounded-3xl border-2 border-indigo-200/80 bg-white/95 backdrop-blur-md shadow-2xl max-w-2xl w-[95vw] sm:w-[620px] mx-auto"
+        className="overflow-hidden p-0 rounded-3xl border-2 border-indigo-200/80 bg-white shadow-2xl max-w-2xl w-[95vw] sm:w-[620px] mx-auto outline-none"
         style={{
           boxShadow:
             "0 25px 60px -15px rgba(79, 70, 229, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95)",
@@ -47,16 +47,23 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-indigo-100/80 px-4 py-2.5 bg-gradient-to-r from-violet-50/40 via-white to-indigo-50/30" cmdk-input-wrapper="">
-    <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0 mr-3">
-      <Search className="h-4 w-4 shrink-0 text-indigo-600" />
-    </div>
+  <div
+    className="flex items-center px-4 py-3 bg-transparent border-b border-indigo-100/60"
+    cmdk-input-wrapper=""
+  >
+    <Search className="h-5 w-5 shrink-0 text-indigo-500 mr-3" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-50",
+        "w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder:text-slate-400",
+        "border-0 border-none outline-none ring-0 shadow-none",
+        "focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none",
+        "focus-visible:border-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none",
+        "[border:none!important] [outline:none!important] [box-shadow:none!important]",
+        "disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      style={{ border: "none", outline: "none", boxShadow: "none" }}
       {...props}
     />
   </div>
