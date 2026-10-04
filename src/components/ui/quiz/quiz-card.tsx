@@ -271,20 +271,20 @@ export default function QuizCard({ quiz }: QuizCardProps) {
           )} opacity-95`}
         />
 
-        {/* Clay watermark — deterministic-random per quiz, purely decorative with high transparency for text legibility */}
+        {/* Background Clay Watermark — larger size, positioned behind all card content */}
         {(() => {
           const seed = quizId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
           const watermark = CLAY_WATERMARKS[seed % CLAY_WATERMARKS.length];
           return (
             <div
               aria-hidden
-              className="absolute -right-3 -top-3 pointer-events-none select-none z-0"
+              className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none select-none z-0"
             >
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-100/10 to-indigo-100/10 flex items-center justify-center p-2">
+              <div className="absolute -right-5 -top-5 w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center transform rotate-6 group-hover/card:scale-105 group-hover/card:rotate-3 transition-all duration-500 ease-out">
                 <img
                   src={watermark}
                   alt=""
-                  className="w-24 h-24 object-contain opacity-[0.10] group-hover/card:opacity-[0.16] transition-opacity duration-300"
+                  className="w-full h-full object-contain opacity-[0.10] group-hover/card:opacity-[0.15] transition-opacity duration-300"
                 />
               </div>
             </div>
