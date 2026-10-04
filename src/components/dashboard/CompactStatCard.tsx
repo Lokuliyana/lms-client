@@ -32,40 +32,40 @@ const statusConfig: Record<
   }
 > = {
   neutral: {
-    card: "bg-white border-slate-200/90 hover:border-slate-300",
-    iconBg: "bg-slate-50 text-slate-600 border-slate-200/60",
+    card: "bg-white border-slate-200/80 hover:border-slate-300 hover:-translate-y-1",
+    iconBg: "bg-slate-50 text-slate-600 border border-slate-200/60 shadow-xs",
     iconColor: "text-slate-600",
-    badge: "bg-slate-100 text-slate-700 border-slate-200",
+    badge: "bg-slate-100 text-slate-700 border border-slate-200",
   },
   emerald: {
-    card: "bg-white border-slate-200/90 hover:border-emerald-200",
-    iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    card: "bg-white border-emerald-100 hover:border-emerald-300 hover:-translate-y-1",
+    iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-xs",
     iconColor: "text-emerald-600",
-    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    badge: "bg-emerald-50 text-emerald-700 border border-emerald-200",
   },
   amber: {
-    card: "bg-white border-slate-200/90 hover:border-amber-200",
-    iconBg: "bg-amber-50 text-amber-600 border-amber-100",
+    card: "bg-white border-amber-100 hover:border-amber-300 hover:-translate-y-1",
+    iconBg: "bg-amber-50 text-amber-700 border border-amber-200/60 shadow-xs",
     iconColor: "text-amber-600",
-    badge: "bg-amber-50 text-amber-700 border-amber-200",
+    badge: "bg-amber-50 text-amber-700 border border-amber-200",
   },
   rose: {
-    card: "bg-white border-slate-200/90 hover:border-rose-200",
-    iconBg: "bg-rose-50 text-rose-600 border-rose-100",
+    card: "bg-white border-rose-100 hover:border-rose-300 hover:-translate-y-1",
+    iconBg: "bg-rose-50 text-rose-700 border border-rose-200/60 shadow-xs",
     iconColor: "text-rose-600",
-    badge: "bg-rose-50 text-rose-700 border-rose-200",
+    badge: "bg-rose-50 text-rose-700 border border-rose-200",
   },
   blue: {
-    card: "bg-white border-slate-200/90 hover:border-blue-200",
-    iconBg: "bg-blue-50 text-blue-600 border-blue-100",
+    card: "bg-white border-blue-100 hover:border-blue-300 hover:-translate-y-1",
+    iconBg: "bg-blue-50 text-blue-700 border border-blue-200/60 shadow-xs",
     iconColor: "text-blue-600",
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    badge: "bg-blue-50 text-blue-700 border border-blue-200",
   },
   purple: {
-    card: "bg-white border-slate-200/90 hover:border-purple-200",
-    iconBg: "bg-purple-50 text-purple-600 border-purple-100",
+    card: "bg-white border-purple-100 hover:border-purple-300 hover:-translate-y-1",
+    iconBg: "bg-purple-50 text-purple-700 border border-purple-200/60 shadow-xs",
     iconColor: "text-purple-600",
-    badge: "bg-purple-50 text-purple-700 border-purple-200",
+    badge: "bg-purple-50 text-purple-700 border border-purple-200",
   },
 };
 
@@ -86,10 +86,13 @@ export function CompactStatCard({
   const content = (
     <div
       className={cn(
-        "rounded-2xl border p-3.5 sm:p-4 shadow-2xs hover:shadow-sm transition-all duration-200 max-h-[125px] flex flex-col justify-between select-none",
+        "rounded-2xl border-2 p-3.5 sm:p-4 transition-all duration-200 max-h-[130px] flex flex-col justify-between select-none active:scale-[0.98]",
         styles.card,
         className
       )}
+      style={{
+        boxShadow: '0 8px 24px -4px rgba(79, 70, 229, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
+      }}
       onClick={onClick}
       {...props}
     >

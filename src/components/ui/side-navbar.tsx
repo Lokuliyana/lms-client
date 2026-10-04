@@ -378,8 +378,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                       className={cn(
                         "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
                         active
-                          ? "bg-indigo-50 text-indigo-700 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                       )}
                     >
                       <Icon
@@ -527,8 +527,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                         className={cn(
                           "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
                           active
-                            ? "bg-indigo-50 text-indigo-700 font-semibold"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                         )}
                       >
                         <Icon
@@ -582,8 +582,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                         className={cn(
                           "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
                           active
-                            ? "bg-indigo-50 text-indigo-700 font-semibold"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                         )}
                       >
                         <Icon
@@ -636,8 +636,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                       className={cn(
                         "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
                         active
-                          ? "bg-indigo-50 text-indigo-700 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                       )}
                     >
                       <Icon
@@ -690,8 +690,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                         className={cn(
                           "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
                           active
-                            ? "bg-indigo-50 text-indigo-700 font-semibold"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                         )}
                       >
                         <Icon

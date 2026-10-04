@@ -7,14 +7,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98]",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-95 hover:shadow-md [box-shadow:0_4px_14px_rgba(79,70,229,0.22),inset_0_1px_1px_rgba(255,255,255,0.35)]",
+          "bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-md border border-transparent hover:opacity-95 [box-shadow:0_4px_14px_rgba(79,70,229,0.32),inset_0_1px_1px_rgba(255,255,255,0.35)] active:[box-shadow:0_2px_4px_rgba(79,70,229,0.2),inset_0_2px_4px_rgba(0,0,0,0.1)]",
         primary:
-          "bg-primary text-primary-foreground shadow-sm border border-transparent hover:opacity-95 hover:shadow-md [box-shadow:0_4px_14px_rgba(79,70,229,0.22),inset_0_1px_1px_rgba(255,255,255,0.35)]",
+          "bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-md border border-transparent hover:opacity-95 [box-shadow:0_4px_14px_rgba(79,70,229,0.32),inset_0_1px_1px_rgba(255,255,255,0.35)] active:[box-shadow:0_2px_4px_rgba(79,70,229,0.2),inset_0_2px_4px_rgba(0,0,0,0.1)]",
         destructive:
           "bg-rose-50 text-rose-700 border border-rose-200/80 hover:bg-rose-100 hover:border-rose-300 shadow-2xs",
         outline:

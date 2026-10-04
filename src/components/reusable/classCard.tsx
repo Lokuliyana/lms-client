@@ -538,12 +538,12 @@ export const ClassCard: FC<ClassCardProps> = ({
         className
       )}
       style={{
-        background: '#FFFFFF',
-        border: '1px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)',
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%)',
+        border: '2px solid rgba(79, 70, 229, 0.08)',
+        boxShadow: '0 4px 8px -2px rgba(67, 56, 202, 0.04), 0 16px 28px -4px rgba(99, 102, 241, 0.09), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
       }}
-      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9)'; el.style.transform = 'translateY(-2px)'; }}
-      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)'; el.style.transform = 'translateY(0)'; }}
+      onMouseEnter={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 8px 16px -2px rgba(67, 56, 202, 0.08), 0 24px 38px -4px rgba(99, 102, 241, 0.16), inset 0 1px 1px rgba(255, 255, 255, 0.95)'; el.style.transform = 'translateY(-3px)'; }}
+      onMouseLeave={(e) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = '0 4px 8px -2px rgba(67, 56, 202, 0.04), 0 16px 28px -4px rgba(99, 102, 241, 0.09), inset 0 1px 1px rgba(255, 255, 255, 0.95)'; el.style.transform = 'translateY(0)'; }}
     >
       {/* Image Container: Soft pastel background for 3D clay illustrations, or dark cover for real photos */}
       <div
@@ -717,12 +717,12 @@ export const ClassCard: FC<ClassCardProps> = ({
           <button
             onClick={() => router.push(href)}
             className={cn(
-              "relative w-full py-2.5 px-4 rounded-xl text-xs font-semibold shadow-xs transition-all duration-200 hover:shadow-md active:scale-[0.98]",
+              "relative w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 shadow-md",
               isEnrolled
                 ? hasAccessThisMonth
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-amber-600 hover:bg-amber-700 text-white"
-                : "bg-primary hover:opacity-90 text-primary-foreground"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white [box-shadow:0_4px_14px_rgba(16,185,129,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white [box-shadow:0_4px_14px_rgba(245,158,11,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]"
+                : "bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white [box-shadow:0_4px_14px_rgba(79,70,229,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]"
             )}
           >
             <span className="relative z-10 flex items-center justify-center gap-1.5">

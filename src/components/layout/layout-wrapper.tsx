@@ -42,12 +42,17 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNav = isAuthScreen || isFocusArena;
 
   return (
-    <div className="relative min-h-screen bg-[#F6F5F0] text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#FAF8F5] text-slate-900 flex flex-col font-sans antialiased overflow-x-hidden">
       <ReLoginDialog />
       <Toaster />
 
-      {/* Subtle Atmospheric Clay Background Layer */}
+      {/* Atmospheric Clay Background Glows - Soft Purple & Blue */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none">
+        <div className="absolute -top-32 right-[5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-purple-200/25 via-indigo-200/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-[35%] -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/20 via-sky-200/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-[65%] -right-24 w-[550px] h-[550px] rounded-full bg-gradient-to-tl from-indigo-200/20 via-purple-200/15 to-transparent blur-3xl pointer-events-none" />
+        
+        {/* Subtle 3D Watermarks */}
         <div className="absolute -top-12 right-[4%] w-72 h-72 opacity-[0.035] transform rotate-12">
           <Image src={CLAY_ASSETS.thumbScienceStem} alt="" fill className="object-contain" priority={false} />
         </div>

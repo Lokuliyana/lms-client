@@ -195,10 +195,10 @@ export default function QuizCard({ quiz }: QuizCardProps) {
       <Button
         onClick={() => router.push(`/quizzes/${quizId}/take?guest=1`)}
         disabled={inactive}
-        className={`w-full h-10 rounded-xl text-white text-xs font-semibold shadow-xs transition-colors ${
+        className={`w-full h-10 rounded-full text-white text-xs font-bold transition-all duration-200 active:scale-95 shadow-md ${
           inactive
             ? "bg-slate-200 hover:bg-slate-200 cursor-not-allowed text-slate-500"
-            : "bg-indigo-600 hover:bg-indigo-700"
+            : "bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 [box-shadow:0_4px_14px_rgba(79,70,229,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]"
         }`}
       >
         <PlayCircle className="w-4 h-4 mr-2" />
@@ -212,10 +212,10 @@ export default function QuizCard({ quiz }: QuizCardProps) {
         trigger={
           <Button
             disabled={inactive}
-            className={`w-full h-10 rounded-xl text-white text-xs font-semibold shadow-xs transition-colors ${
+            className={`w-full h-10 rounded-full text-white text-xs font-bold transition-all duration-200 active:scale-95 shadow-md ${
               inactive
                 ? "bg-slate-200 hover:bg-slate-200 cursor-not-allowed text-slate-500"
-                : "bg-indigo-600 hover:bg-indigo-700"
+                : "bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 [box-shadow:0_4px_14px_rgba(79,70,229,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]"
             }`}
           >
             <PlayCircle className="w-4 h-4 mr-2" />
@@ -248,14 +248,14 @@ export default function QuizCard({ quiz }: QuizCardProps) {
   return (
     <>
       <Card
-        className="relative overflow-hidden rounded-2xl flex flex-col justify-between h-full transition-all duration-300 group/card"
+        className="relative overflow-visible rounded-3xl flex flex-col justify-between h-full transition-all duration-300 group/card"
         style={{
-          background: '#FFFFFF',
-          border: '1px solid rgba(0,0,0,0.07)',
-          boxShadow: '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F5 100%)',
+          border: '2px solid rgba(124, 58, 237, 0.08)',
+          boxShadow: '0 4px 8px -2px rgba(67, 56, 202, 0.04), 0 16px 28px -4px rgba(99, 102, 241, 0.09), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
         }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 16px 40px -6px rgba(0,0,0,0.10), 0 6px 16px -3px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.9)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 30px -5px rgba(0,0,0,0.06), 0 4px 12px -2px rgba(0,0,0,0.03), inset 0 1px 1px rgba(255,255,255,0.9)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 16px -2px rgba(67, 56, 202, 0.08), 0 24px 38px -4px rgba(99, 102, 241, 0.16), inset 0 1px 1px rgba(255, 255, 255, 0.95)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 8px -2px rgba(67, 56, 202, 0.04), 0 16px 28px -4px rgba(99, 102, 241, 0.09), inset 0 1px 1px rgba(255, 255, 255, 0.95)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
       >
         <div
           aria-hidden
@@ -278,13 +278,15 @@ export default function QuizCard({ quiz }: QuizCardProps) {
           return (
             <div
               aria-hidden
-              className="absolute right-3 top-[5%] pointer-events-none select-none z-[1]"
+              className="absolute -right-2 -top-4 pointer-events-none select-none z-[1] drop-shadow-md"
             >
-              <img
-                src={watermark}
-                alt=""
-                className="w-36 h-36 object-contain opacity-[0.22]"
-              />
+              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-100/40 to-indigo-100/30 flex items-center justify-center p-2">
+                <img
+                  src={watermark}
+                  alt=""
+                  className="w-24 h-24 object-contain opacity-[0.35]"
+                />
+              </div>
             </div>
           );
         })()}
