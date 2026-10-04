@@ -79,6 +79,10 @@ export default function StudentDashboard() {
     fetchData();
   }, [user, authLoading]);
 
+  if (authLoading || loading) {
+    return <SectionLoader />;
+  }
+
   return (
     <>
       <Head>

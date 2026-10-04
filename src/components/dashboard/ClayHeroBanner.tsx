@@ -39,8 +39,8 @@ export function ClayHeroBanner({
 }: ClayHeroBannerProps) {
   const isAdmin = variant === "admin";
   const themeClass = isAdmin
-    ? "bg-gradient-to-r from-purple-50/95 via-indigo-50/70 to-blue-50/90 border-2 border-purple-200/50 text-slate-900"
-    : "bg-gradient-to-r from-violet-50/95 via-purple-50/70 to-indigo-50/90 border-2 border-indigo-200/50 text-slate-900";
+    ? "bg-gradient-to-r from-purple-100/95 via-indigo-100/80 to-blue-100/90 border-2 border-purple-300/70 text-slate-900"
+    : "bg-gradient-to-r from-violet-100/95 via-purple-100/80 to-indigo-100/95 border-2 border-purple-300/70 text-slate-900";
 
   return (
     <div
@@ -50,20 +50,20 @@ export function ClayHeroBanner({
         className
       )}
       style={{
-        boxShadow: '0 16px 40px -8px rgba(99, 102, 241, 0.12), 0 4px 14px -2px rgba(168, 85, 247, 0.06), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
+        boxShadow: '0 18px 44px -8px rgba(124, 58, 237, 0.20), 0 6px 18px -2px rgba(99, 102, 241, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.95)',
       }}
     >
       {/* Decorative Glow Elements */}
       <div
         className={cn(
-          "absolute -top-12 -left-12 w-48 h-48 rounded-full blur-2xl pointer-events-none",
-          isAdmin ? "bg-purple-300/30" : "bg-indigo-300/30"
+          "absolute -top-12 -left-12 w-56 h-56 rounded-full blur-3xl pointer-events-none",
+          isAdmin ? "bg-purple-400/40" : "bg-violet-400/40"
         )}
       />
       <div
         className={cn(
-          "absolute -bottom-12 right-1/4 w-40 h-40 rounded-full blur-2xl pointer-events-none",
-          isAdmin ? "bg-blue-200/30" : "bg-purple-200/30"
+          "absolute -bottom-12 right-1/4 w-48 h-48 rounded-full blur-3xl pointer-events-none",
+          isAdmin ? "bg-blue-300/40" : "bg-purple-300/40"
         )}
       />
 
