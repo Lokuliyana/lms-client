@@ -10,6 +10,7 @@ import {
   Award,
   BarChart2,
   Calendar,
+  CornerDownLeft,
   Download,
   Eye,
   EyeOff,
@@ -24,7 +25,26 @@ interface ClassGradesProps {
   classId: string;
   isPrivileged: boolean;
   enrolledStudents?: any[];
+  selectedMonth?: string;
 }
+
+const getStudentDisplayName = (s: any) => {
+  if (!s) return "Student";
+  const fn = s.first_name || s.firstName || "";
+  const ln = s.last_name || s.lastName || "";
+  const combined = `${fn} ${ln}`.trim();
+  return (
+    s.full_name ||
+    s.fullName ||
+    s.student_profile?.full_name ||
+    (combined.length > 0 ? combined : null) ||
+    s.computedName ||
+    s.name ||
+    s.username ||
+    s.email?.split("@")[0] ||
+    "Student"
+  );
+};
 
 function getGradeBadgeColor(grade: string) {
   switch (grade) {
@@ -51,7 +71,12 @@ function calculateGrade(percentage: number): string {
   return "F";
 }
 
-export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: ClassGradesProps) {
+export function ClassGrades({
+  classId,
+  isPrivileged,
+  enrolledStudents = [],
+  selectedMonth,
+}: ClassGradesProps) {
   const [exams, setExams] = useState<ExamResultDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +85,7 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
   // Form states for creating / editing
   const [examTitle, setExamTitle] = useState("");
   const [examDate, setExamDate] = useState(new Date().toISOString().split("T")[0]);
-  const [termOrMonth, setTermOrMonth] = useState("");
+  const [termOrMonth, setTermOrMonth] = useState(selectedMonth && selectedMonth !== "all" ? selectedMonth : "");
   const [maxMarks, setMaxMarks] = useState<number>(100);
   const [passMarks, setPassMarks] = useState<number>(40);
   const [isPublished, setIsPublished] = useState<boolean>(true);
@@ -76,16 +101,73 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
     }>
   >([]);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const scoreInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleScoreKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    currentIndex: number
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (currentIndex + 1 < scores.length) {
+        const nextInput = scoreInputRefs.current[currentIndex + 1];
+        if (nextInput) {
+          nextInput.focus();
+          try {
+            nextInput.select();
+          } catch {}
+          nextInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+      }
+    } else if ((e.key === "Enter" && e.shiftKey) || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (currentIndex - 1 >= 0) {
+        const prevInput = scoreInputRefs.current[currentIndex - 1];
+        if (prevInput) {
+          prevInput.focus();
+          try {
+            prevInput.select();
+          } catch {}
+          prevInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (currentIndex + 1 < scores.length) {
+        const nextInput = scoreInputRefs.current[currentIndex + 1];
+        if (nextInput) {
+          nextInput.focus();
+          try {
+            nextInput.select();
+          } catch {}
+          nextInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     fetchExams();
-  }, [classId, isPrivileged]);
+  }, [classId, isPrivileged, selectedMonth]);
+
+  useEffect(() => {
+    if (selectedMonth && selectedMonth !== "all" && !activeExamId) {
+      setTermOrMonth(selectedMonth);
+    }
+  }, [selectedMonth, activeExamId]);
+
+  useEffect(() => {
+    if (enrolledStudents.length > 0 && !activeExamId) {
+      initRoster(enrolledStudents, maxMarks);
+    }
+  }, [enrolledStudents, maxMarks, activeExamId]);
 
   const fetchExams = async () => {
     setLoading(true);
     try {
+      const monthParam = selectedMonth && selectedMonth !== "all" ? selectedMonth : undefined;
       if (isPrivileged) {
-        const res = await gradeService.getClassExamResults(classId);
+        const res = await gradeService.getClassExamResults(classId, monthParam ? { month: monthParam } : undefined);
         if (res.success) {
           setExams(res.data);
         }
@@ -106,7 +188,7 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
   const initRoster = (students: any[], max: number) => {
     const list = students.map((s) => ({
       studentId: s._id || s.id,
-      name: s.full_name || s.name || s.username || "Student",
+      name: getStudentDisplayName(s),
       email: s.email || "",
       marksObtained: 0,
       percentage: 0,
@@ -197,14 +279,28 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
       scoreMap.set(String(sid), s);
     });
 
-    const newScores = enrolledStudents.map((s) => {
+    const studentList: any[] = [...enrolledStudents];
+    const seenIds = new Set(enrolledStudents.map((s) => String(s._id || s.id)));
+    (exam.scores || []).forEach((sc: any) => {
+      const sid = String(sc.studentId?._id || sc.studentId);
+      if (!seenIds.has(sid)) {
+        seenIds.add(sid);
+        studentList.push(
+          typeof sc.studentId === "object"
+            ? sc.studentId
+            : { _id: sid, name: "Student", email: "" }
+        );
+      }
+    });
+
+    const newScores = studentList.map((s) => {
       const sid = String(s._id || s.id);
       const existing = scoreMap.get(sid);
       const marks = existing?.marksObtained ?? 0;
       const pct = exam.maxMarks > 0 ? Math.round((marks / exam.maxMarks) * 100 * 10) / 10 : 0;
       return {
         studentId: sid,
-        name: s.full_name || s.name || s.username || "Student",
+        name: getStudentDisplayName(s),
         email: s.email || "",
         marksObtained: marks,
         percentage: pct,
@@ -469,11 +565,15 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
 
       {/* Roster Score Entry Sheet */}
       <Card className="bg-white border-slate-200 overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Users className="w-4 h-4 text-slate-500" />
             Student Score Sheet ({scores.length})
           </h3>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-semibold shrink-0">
+            <CornerDownLeft className="w-3.5 h-3.5" />
+            <span>Press <strong>Enter ↵</strong> or <strong>↓</strong> to jump to next student</span>
+          </div>
         </div>
         {scores.length === 0 ? (
           <div className="p-10 text-center text-slate-500 text-sm">
@@ -492,7 +592,7 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {scores.map((s) => (
+                {scores.map((s, idx) => (
                   <tr key={s.studentId} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4">
                       <p className="font-medium text-slate-900 text-sm">{s.name}</p>
@@ -500,12 +600,21 @@ export function ClassGrades({ classId, isPrivileged, enrolledStudents = [] }: Cl
                     </td>
                     <td className="py-3 px-4">
                       <Input
+                        ref={(el) => {
+                          scoreInputRefs.current[idx] = el;
+                        }}
                         type="number"
                         min="0"
                         max={maxMarks}
                         value={s.marksObtained}
                         onChange={(e) => handleScoreChange(s.studentId, e.target.value)}
-                        className="w-24 h-8 text-sm font-semibold"
+                        onKeyDown={(e) => handleScoreKeyDown(e, idx)}
+                        onFocus={(e) => {
+                          try {
+                            e.target.select();
+                          } catch {}
+                        }}
+                        className="w-24 h-8 text-sm font-semibold transition-all focus:ring-2 focus:ring-indigo-500 border-slate-200 focus:border-indigo-500"
                       />
                     </td>
                     <td className="py-3 px-4 font-medium text-slate-700">

@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { examService, IExam } from "@/services/examService";
 import { attendanceService } from "@/services/attendanceService";
+import { classService } from "@/services/classService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/dev/select";
 import {
   Award,
   ArrowLeft,
@@ -15,6 +23,9 @@ import {
   User,
   Calculator,
   Search,
+  Calendar,
+  Filter,
+  CornerDownLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -42,6 +53,11 @@ export default function ExamMarkEntryPage() {
   const [saving, setSaving] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [monthChoices, setMonthChoices] = useState<string[]>([]);
+
+  // Ref array for quick keyboard navigation between marks input fields
+  const marksInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     if (examId) {
@@ -58,7 +74,7 @@ export default function ExamMarkEntryPage() {
     return "F";
   };
 
-  const loadExamAndRoster = async () => {
+  const loadExamAndRoster = async (targetMonth?: string) => {
     try {
       setLoading(true);
       const res = await examService.getExamById(examId);
@@ -68,23 +84,81 @@ export default function ExamMarkEntryPage() {
         setExam(examDoc);
         setIsPublished(examDoc.is_published || resultDoc?.isPublished || false);
 
-        // Fetch enrolled students for class roster
-        const classId = examDoc.class_id?._id || examDoc.class_id;
-        const rosterRes = await attendanceService.getSessionRoster(classId);
+        // Derive target month from exam held_date (YYYY-MM in Asia/Colombo)
+        let examMonth = "";
+        try {
+          if (examDoc.held_date) {
+            examMonth = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Colombo",
+              year: "numeric",
+              month: "2-digit",
+            }).format(new Date(examDoc.held_date)).slice(0, 7);
+          }
+        } catch {
+          examMonth = new Date().toISOString().slice(0, 7);
+        }
+        if (!examMonth) {
+          examMonth = new Date().toISOString().slice(0, 7);
+        }
 
-        const enrolledList = rosterRes?.data?.roster || [];
+        const activeMonth = targetMonth || selectedMonth || examMonth;
+        setSelectedMonth(activeMonth);
+
+        // Month choices
+        const choices = new Set<string>();
+        choices.add(examMonth);
+        const [y, m] = examMonth.split("-").map(Number);
+        if (y && m) {
+          for (let i = -4; i <= 4; i++) {
+            const d = new Date(y, m - 1 + i, 1);
+            choices.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+          }
+        }
+        const sortedMonths = Array.from(choices).sort((a, b) => b.localeCompare(a));
+        setMonthChoices(["all", ...sortedMonths]);
+
+        // Fetch students registered for this month (or all enrolled students)
+        const classId = (examDoc.class_id?._id || examDoc.class_id).toString();
+        const enrolledList = await classService.getEnrolledStudents(classId, activeMonth);
         const existingScores = resultDoc?.scores || [];
 
-        const initialRows: StudentMarkRow[] = enrolledList.map((stu: any) => {
-          const sid = stu.studentId?._id ? stu.studentId._id.toString() : stu.studentId.toString();
+        const studentMap = new Map<string, any>();
+        (Array.isArray(enrolledList) ? enrolledList : []).forEach((stu: any) => {
+          const sid = (stu._id || stu.id || stu.studentId?._id || stu.studentId || "").toString();
+          if (sid) studentMap.set(sid, stu);
+        });
+
+        // Ensure students who already have recorded marks are not dropped
+        existingScores.forEach((sc: any) => {
+          const stuObj = sc.studentId;
+          const sid = (stuObj?._id || stuObj || "").toString();
+          if (sid && !studentMap.has(sid)) {
+            studentMap.set(sid, typeof stuObj === "object" ? stuObj : { _id: sid, name: "Student", email: "" });
+          }
+        });
+
+        const initialRows: StudentMarkRow[] = Array.from(studentMap.values()).map((stu: any) => {
+          const sid = (stu._id || stu.id || stu.studentId?._id || stu.studentId || "").toString();
           const existing = existingScores.find(
             (s: any) =>
               (s.studentId?._id ? s.studentId._id.toString() : s.studentId?.toString()) === sid
           );
 
+          const firstName = stu.first_name || stu.firstName || "";
+          const lastName = stu.last_name || stu.lastName || "";
+          const combined = `${firstName} ${lastName}`.trim();
+          const fullName =
+            stu.full_name ||
+            stu.fullName ||
+            stu.student_profile?.full_name ||
+            (combined.length > 0 ? combined : null) ||
+            stu.name ||
+            stu.email ||
+            "Student";
+
           return {
             student_id: sid,
-            name: `${stu.first_name || ""} ${stu.last_name || ""}`.trim() || stu.email || "Student",
+            name: fullName,
             email: stu.email || "",
             marks_obtained: existing ? existing.marksObtained : "",
             is_absent: existing ? Boolean(existing.isAbsent) : false,
@@ -101,15 +175,23 @@ export default function ExamMarkEntryPage() {
     }
   };
 
-  const updateRow = (index: number, field: keyof StudentMarkRow, value: any) => {
-    setRows((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      if (field === "is_absent" && value === true) {
-        next[index].marks_obtained = 0;
-      }
-      return next;
-    });
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    loadExamAndRoster(month);
+  };
+
+  // Safe update by unique student_id so filtering never mutates the wrong student
+  const updateRowByStudentId = (studentId: string, field: keyof StudentMarkRow, value: any) => {
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.student_id !== studentId) return r;
+        const updated = { ...r, [field]: value };
+        if (field === "is_absent" && value === true) {
+          updated.marks_obtained = 0;
+        }
+        return updated;
+      })
+    );
   };
 
   const handleSaveMarks = async (publishImmediate = false) => {
@@ -151,6 +233,56 @@ export default function ExamMarkEntryPage() {
       r.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Keyboard navigation: Enter or ArrowDown focuses next student marks input
+  const handleMarksKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    currentIndex: number
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      // Find the next student row that isn't marked absent
+      for (let i = currentIndex + 1; i < filteredRows.length; i++) {
+        if (!filteredRows[i].is_absent && marksInputRefs.current[i]) {
+          const targetInput = marksInputRefs.current[i];
+          targetInput?.focus();
+          try {
+            targetInput?.select();
+          } catch {}
+          targetInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          return;
+        }
+      }
+      toast.info("Reached end of student roster.");
+    } else if ((e.key === "Enter" && e.shiftKey) || e.key === "ArrowUp") {
+      e.preventDefault();
+      // Find the previous student row that isn't marked absent
+      for (let i = currentIndex - 1; i >= 0; i--) {
+        if (!filteredRows[i].is_absent && marksInputRefs.current[i]) {
+          const targetInput = marksInputRefs.current[i];
+          targetInput?.focus();
+          try {
+            targetInput?.select();
+          } catch {}
+          targetInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          return;
+        }
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      for (let i = currentIndex + 1; i < filteredRows.length; i++) {
+        if (!filteredRows[i].is_absent && marksInputRefs.current[i]) {
+          const targetInput = marksInputRefs.current[i];
+          targetInput?.focus();
+          try {
+            targetInput?.select();
+          } catch {}
+          targetInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          return;
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -191,20 +323,57 @@ export default function ExamMarkEntryPage() {
           }
         />
 
-        {/* Filter / Search Bar */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="relative w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              value={searchTerm}
-              onChange={(e: any) => setSearchTerm(e.target.value)}
-              placeholder="Search student by name..."
-              className="pl-9 text-xs rounded-xl bg-white dark:bg-slate-900"
-            />
+        {/* Month Selector & Filter / Search Bar */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-2xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Registered Month:
+              </span>
+              <div className="w-48">
+                <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                  <SelectTrigger className="w-full bg-slate-50 dark:bg-slate-800 text-xs font-semibold rounded-xl border-slate-200">
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-56">
+                    {monthChoices.map((mk) => (
+                      <SelectItem key={mk} value={mk}>
+                        {mk === "all" ? "All Enrolled Students" : mk}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-xl flex items-center gap-1">
+                <CheckCircle className="w-3.5 h-3.5" />
+                {selectedMonth === "all"
+                  ? "Showing all enrolled students in this class"
+                  : `Only registered students for ${selectedMonth} are visible`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 shrink-0">
+                Registered Students: <span className="font-bold text-slate-900 dark:text-white">{rows.length}</span>
+              </span>
+            </div>
           </div>
 
-          <div className="text-xs text-slate-500">
-            Enrolled Students: <span className="font-bold text-slate-900 dark:text-white">{rows.length}</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={searchTerm}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
+                placeholder="Search registered students by name or email..."
+                className="pl-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 h-9"
+              />
+            </div>
+            {/* Keyboard shortcut hint */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-semibold shrink-0">
+              <CornerDownLeft className="w-3.5 h-3.5" />
+              <span>Press <strong>Enter ↵</strong> or <strong>↓</strong> to jump to next student</span>
+            </div>
           </div>
         </div>
 
@@ -215,7 +384,7 @@ export default function ExamMarkEntryPage() {
               <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase font-semibold">
                 <tr>
                   <th className="py-3 px-4">Student</th>
-                  <th className="py-3 px-4 w-32">Marks ({exam?.total_marks || 100})</th>
+                  <th className="py-3 px-4 w-36">Marks ({exam?.total_marks || 100})</th>
                   <th className="py-3 px-4 w-24 text-center">Absent</th>
                   <th className="py-3 px-4 w-28 text-center">Percentage</th>
                   <th className="py-3 px-4 w-24 text-center">Grade</th>
@@ -266,21 +435,34 @@ export default function ExamMarkEntryPage() {
                         </td>
                         <td className="py-3 px-4">
                           <Input
+                            ref={(el) => {
+                              marksInputRefs.current[idx] = el;
+                            }}
                             type="number"
                             min={0}
                             max={maxMarks}
                             disabled={row.is_absent}
                             value={row.marks_obtained}
-                            onChange={(e: any) => updateRow(idx, "marks_obtained", e.target.value)}
+                            onChange={(e: any) =>
+                              updateRowByStudentId(row.student_id, "marks_obtained", e.target.value)
+                            }
+                            onKeyDown={(e) => handleMarksKeyDown(e, idx)}
+                            onFocus={(e) => {
+                              try {
+                                e.target.select();
+                              } catch {}
+                            }}
                             placeholder="0"
-                            className="w-24 text-xs font-bold rounded-xl"
+                            className="w-28 text-xs font-bold rounded-xl transition-all focus:ring-2 focus:ring-indigo-500 border-slate-200 focus:border-indigo-500"
                           />
                         </td>
                         <td className="py-3 px-4 text-center">
                           <input
                             type="checkbox"
                             checked={row.is_absent}
-                            onChange={(e: any) => updateRow(idx, "is_absent", e.target.checked)}
+                            onChange={(e: any) =>
+                              updateRowByStudentId(row.student_id, "is_absent", e.target.checked)
+                            }
                             className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer"
                           />
                         </td>
@@ -307,7 +489,9 @@ export default function ExamMarkEntryPage() {
                         <td className="py-3 px-4">
                           <Input
                             value={row.remarks}
-                            onChange={(e: any) => updateRow(idx, "remarks", e.target.value)}
+                            onChange={(e: any) =>
+                              updateRowByStudentId(row.student_id, "remarks", e.target.value)
+                            }
                             placeholder="e.g. Excellent presentation in Section B"
                             className="text-xs rounded-xl"
                           />

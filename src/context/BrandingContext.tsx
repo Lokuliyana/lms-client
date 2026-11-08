@@ -26,7 +26,7 @@ export interface BrandingConfig {
 
 export const DEFAULT_BRANDING: BrandingConfig = {
   platformName: 'NexvoLearn',
-  instructorName: 'Danidu',
+  instructorName: 'Danidu Lokuliyana',
   slogan: 'Empowering Minds Through Modern Education',
   contactPhone: '+94 77 123 4567',
   contactEmail: 'support@nexvolearn.com',

@@ -10,7 +10,8 @@ export type QuestionType =
   | "fill-blank"
   | "multiple-select"
   | "slider"
-  | "drag-drop";
+  | "drag-drop"
+  | "numeric";
 
 // A single question used inside form + metadata
 export type Question = {
@@ -22,6 +23,7 @@ export type Question = {
   image?: string | null;
   explanation?: string;
   formula?: string;
+  tolerance?: number;
   subject?: string;           // keep in sync with quiz subject if you propagate it
   options?: string[];         // for MCQ / multiple-select
   marks?: number;             // UI-optional, backend defaults/validates
@@ -51,6 +53,7 @@ export type SafeQuestion = {
   options?: string[];
   image?: string | null;
   marks: number;
+  tolerance?: number;
   sliderRange?: { min: number; max: number; step: number };
   dragItems?: { items: string[]; matches: string[] };
 };
@@ -186,6 +189,10 @@ export interface QuizSubmissionPayload {
     answer: string | number | boolean | (string | number)[];
     time_ms?: number; // optional per-question time in ms
   }[];
+  telemetry?: {
+    tabSwitches?: number;
+    blurDurationMs?: number;
+  };
 }
 
 // ==============================

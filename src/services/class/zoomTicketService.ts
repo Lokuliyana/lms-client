@@ -540,10 +540,11 @@ const getMyEnrolledClasses = async () => {
   }
 };
 
-export const createMeetingTicket = async (classId: string, mode: 'join' | 'start') => {
+export const createMeetingTicket = async (classId: string, mode: 'join' | 'start', sessionType?: 'regular' | 'special') => {
   const { data } = await API.post<{ ticket: string; redirect: string }>('/meetings/ticket', {
     classId,
     mode,
+    sessionType,
   });
   return data;
 };

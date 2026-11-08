@@ -115,97 +115,64 @@ export function CatalogFilterBar({
         </Button>
       </div>
 
-      {/* Unified Filter Bar: Left Grade Pills & Right Subject/View Dropdowns */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-        {/* Left Side: Sleek Grade Selection Pills (or search input if provided) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-thin scrollbar-thumb-slate-200 flex-1 min-w-0">
-          {quickGradeOptions && quickGradeOptions.length > 0 ? (
-            <div className="flex items-center gap-1.5 shrink-0 py-0.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
-                <GraduationCap className="w-3.5 h-3.5 text-primary" />
-                Grade:
-              </span>
-              {quickGradeOptions.map((opt) => {
-                const isSelected =
-                  gradeFilter === opt.value ||
-                  (opt.value !== "all" &&
-                    gradeFilter.replace(/^grade\s*/i, "").toLowerCase() ===
-                      opt.value.replace(/^grade\s*/i, "").toLowerCase());
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => onGradeFilterChange(opt.value)}
-                    type="button"
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all duration-200 border",
-                      isSelected
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm ring-2 ring-primary/20 scale-[1.02]"
-                        : "bg-[#FAF9F5] hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-black/5 shadow-2xs"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            /* Fallback Grade Dropdown only when quickGradeOptions are not passed */
-            <div className="hidden sm:flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="h-8.5 border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium rounded-xl shadow-2xs"
-                  >
-                    {gradeLabel}:{" "}
-                    {gradeOptions.find(
-                      (opt) =>
-                        opt.value === gradeFilter ||
-                        (opt.value !== "all" &&
-                          opt.value.replace(/^grade\s*/i, "").toLowerCase() ===
-                            gradeFilter.replace(/^grade\s*/i, "").toLowerCase())
-                    )?.label || gradeFilter}
-                    <ChevronDown className="ml-2 h-3.5 w-3.5 opacity-60" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48 max-h-64 overflow-y-auto rounded-xl shadow-lg">
-                  {gradeOptions.map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onClick={() => onGradeFilterChange(option.value)}
-                      className="text-xs"
-                    >
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
+      {/* Unified Filter Bar: Grade Chips/Tabs, Subject Dropdown, View Dropdown, Search, Clear */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+        {/* Grade Chips / Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+          {(quickGradeOptions && quickGradeOptions.length > 0 ? quickGradeOptions : gradeOptions).map((chip) => {
+            const isSelected =
+              chip.value === gradeFilter ||
+              (chip.value === "all" && (gradeFilter === "all" || !gradeFilter)) ||
+              (chip.value !== "all" &&
+                chip.value.replace(/^grade\s*/i, "").trim().toLowerCase() ===
+                  gradeFilter.replace(/^grade\s*/i, "").trim().toLowerCase());
+
+            return (
+              <button
+                key={chip.value}
+                type="button"
+                onClick={() => onGradeFilterChange(chip.value)}
+                className={cn(
+                  "h-9 px-3.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs",
+                  isSelected
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/60"
+                )}
+              >
+                {chip.value !== "all" && <GraduationCap className="w-3.5 h-3.5 opacity-70" />}
+                <span>{chip.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Right Side: Subject Dropdown, View Dropdown, Reset Action */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
+        {/* Secondary controls: Subject, View, Search, Reset */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Subject Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 className={cn(
-                  "h-8.5 border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium rounded-xl shadow-2xs",
-                  subjectFilter !== "all" && "border-primary/50 text-primary font-semibold bg-primary/5"
+                  "h-9 px-3 border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5",
+                  subjectFilter !== "all" && "border-indigo-400 bg-indigo-50/60 text-indigo-700"
                 )}
               >
-                {subjectLabel}: {subjectOptions.find((opt) => opt.value === subjectFilter)?.label || subjectFilter}
-                <ChevronDown className="ml-2 h-3.5 w-3.5 opacity-60" />
+                <span>
+                  {subjectLabel}: {subjectOptions.find((opt) => opt.value === subjectFilter)?.label || (subjectFilter === "all" ? "All Subjects" : subjectFilter)}
+                </span>
+                <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 max-h-64 overflow-y-auto rounded-xl shadow-lg">
+            <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto rounded-xl shadow-xl">
               {subjectOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
                   onClick={() => onSubjectFilterChange(option.value)}
-                  className="text-xs"
+                  className={cn(
+                    "text-xs cursor-pointer",
+                    subjectFilter === option.value && "bg-indigo-50 text-indigo-700 font-semibold"
+                  )}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -220,20 +187,25 @@ export function CatalogFilterBar({
                 <Button
                   variant="outline"
                   className={cn(
-                    "h-8.5 border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium rounded-xl shadow-2xs",
-                    viewFilter && viewFilter !== "all" && "border-primary/50 text-primary font-semibold bg-primary/5"
+                    "h-9 px-3 border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5",
+                    viewFilter && viewFilter !== "all" && "border-indigo-400 bg-indigo-50/60 text-indigo-700"
                   )}
                 >
-                  {viewLabel}: {viewOptions.find((opt) => opt.value === viewFilter)?.label || viewFilter}
-                  <ChevronDown className="ml-2 h-3.5 w-3.5 opacity-60" />
+                  <span>
+                    {viewLabel}: {viewOptions.find((opt) => opt.value === viewFilter)?.label || viewFilter}
+                  </span>
+                  <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-lg">
+              <DropdownMenuContent align="start" className="w-48 rounded-xl shadow-xl">
                 {viewOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => onViewFilterChange(option.value)}
-                    className="text-xs"
+                    className={cn(
+                      "text-xs cursor-pointer",
+                      viewFilter === option.value && "bg-indigo-50 text-indigo-700 font-semibold"
+                    )}
                   >
                     {option.label}
                   </DropdownMenuItem>
@@ -248,10 +220,34 @@ export function CatalogFilterBar({
               variant="ghost"
               size="sm"
               onClick={onClearAll}
-              className="h-8.5 px-2.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl"
+              className="h-9 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl"
             >
+              <X className="w-3.5 h-3.5 mr-1" />
               Reset
             </Button>
+          )}
+
+          {/* Optional Search Query if provided */}
+          {onSearchQueryChange && (
+            <div className="relative w-full sm:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery || ""}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="w-full h-9 pl-9 pr-8 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => onSearchQueryChange("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

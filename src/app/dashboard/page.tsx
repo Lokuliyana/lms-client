@@ -1,9 +1,13 @@
 // app/(dashboard)/student-dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranding } from "@/hooks/useBranding";
+import { useEditMode } from "@/context/EditModeContext";
+import { useCustomization } from "@/context/CustomizationContext";
 
 import { SectionHeader } from "@/components/reusable/section-header";
 import { CardSection } from "@/components/reusable/card-section";
@@ -21,40 +25,73 @@ import EditableContent from "@/components/admin/editable-content";
 import { ClayHeroBanner } from "@/components/dashboard/ClayHeroBanner";
 import { CompactStatCard } from "@/components/dashboard/CompactStatCard";
 import { CLAY_ASSETS } from "@/constants/clayAssets";
+import { NextLiveSessionCard } from "@/components/dashboard/NextLiveSessionCard";
+import {
+  GraduationCap,
+  Globe,
+  LayoutDashboard,
+  Sparkles,
+  Eye,
+  Edit2,
+  CheckCircle2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export default function StudentDashboard() {
+function StudentDashboardContent() {
   const [classes, setClasses] = useState<any[]>([]);
   const [enrolledClasses, setEnrolledClasses] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const { user, loading: authLoading } = useAuth();
-  const [isGuest, setIsGuest] = useState(true);
-  const [displayName, setDisplayName] = useState<string | undefined>(undefined);
+  const { branding } = useBranding();
+  const { isEditMode, toggleEditMode, setEditMode } = useEditMode();
+  const { pagesSettings } = useCustomization();
+
+  const whatsappRaw = branding?.supportWhatsApp || branding?.contactPhone || "";
+  const cleanWa = whatsappRaw.replace(/[^0-9]/g, "");
+  const waDashboardLink = `https://wa.me/${cleanWa.startsWith("0") ? "94" + cleanWa.slice(1) : cleanWa}`;
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const isStaff =
+    user?.role === "teacher" ||
+    user?.role === "admin" ||
+    user?.role === "moderator";
+
+  const isTeacher = user?.role === "teacher";
+  const viewParam = searchParams?.get("view");
+  const staffView = viewParam === "guest" ? "guest" : "student";
+
+  // Derive isGuest and displayName synchronously to prevent layout flashes
+  const isGuest = !user || (isStaff && staffView === "guest");
+  const displayName = user
+    ? user.full_name ||
+      user.fullName ||
+      [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+      undefined
+    : undefined;
 
   const [loading, setLoading] = useState(true);
 
+  const switchPerspective = (targetView: "student" | "guest") => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    params.set("view", targetView);
+    if (isEditMode) {
+      params.set("edit", "true");
+    } else {
+      params.delete("edit");
+    }
+    router.replace(`/dashboard?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (searchParams?.get("edit") === "true") {
+      setEditMode(true);
+    }
+  }, [searchParams, setEditMode]);
+
   useEffect(() => {
     if (authLoading) return;
-
-    if (user) {
-      const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator";
-      if (isStaff) {
-        router.replace("/admin/dashboard");
-        return;
-      }
-
-      setIsGuest(false);
-      setDisplayName(
-        user?.full_name ||
-          user?.fullName ||
-          [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
-          undefined
-      );
-    } else {
-      setIsGuest(true);
-      setDisplayName(undefined);
-    }
 
     async function fetchData() {
       try {
@@ -64,7 +101,12 @@ export default function StudentDashboard() {
         ];
         
         if (user) {
-          promises.push(getMyEnrolledClasses());
+          promises.push(
+            getMyEnrolledClasses().catch((err) => {
+              console.error("Failed to load enrolled classes:", err);
+              return [];
+            })
+          );
         }
 
         const results = await Promise.all(promises);
@@ -89,6 +131,11 @@ export default function StudentDashboard() {
     return <SectionLoader />;
   }
 
+  const activeDashboard = (pagesSettings?.dashboard || pagesConfig?.dashboard) as any;
+  const studentHeroConfig = activeDashboard?.studentHero || {};
+  const showEnrolled = !isGuest && (enrolledClasses.length > 0 || isStaff);
+  const displayedEnrolled = enrolledClasses.length > 0 ? enrolledClasses : classes.slice(0, 3);
+
   return (
     <>
       <Head>
@@ -105,21 +152,117 @@ export default function StudentDashboard() {
         <meta property="og:image" content={pagesConfig.dashboard.metadata.ogImage} />
       </Head>
 
-      <div className="space-y-8 sm:space-y-9">
+      <div className="space-y-6 sm:space-y-8">
+        {/* Pleasant Small Toggle in Right Side Corner */}
+        {isStaff && (
+          <div className="w-full flex justify-end items-center gap-2 pb-0.5 animate-in fade-in duration-200">
+            <div className="inline-flex items-center p-1 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-full border border-slate-200/90 dark:border-slate-700 shadow-2xs gap-1">
+              <button
+                type="button"
+                onClick={() => switchPerspective("student")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all",
+                  staffView === "student"
+                    ? "bg-indigo-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/60"
+                )}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => switchPerspective("guest")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all",
+                  staffView === "guest"
+                    ? "bg-indigo-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/60"
+                )}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>Guest</span>
+              </button>
+            </div>
+
+            {/* Quick Live Edit Toggle */}
+            <button
+              type="button"
+              onClick={toggleEditMode}
+              title={isEditMode ? "Live Editing Active" : "Enable Live Edit Mode"}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border shadow-2xs",
+                isEditMode
+                  ? "bg-amber-400 text-slate-950 border-amber-300 font-bold"
+                  : "bg-white/95 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700"
+              )}
+            >
+              {isEditMode ? (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-slate-950" />
+                  <span className="hidden sm:inline">Editing</span>
+                </>
+              ) : (
+                <>
+                  <Edit2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span className="hidden sm:inline">Edit Mode</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Clay Hero Banner & Compact Stats for Logged-In Students */}
         {!isGuest && (
           <div className="space-y-4">
             <ClayHeroBanner
-              title={`Welcome back, ${displayName || "Scholar"}! ✨`}
-              description="Track your enrolled classes, scheduled live sessions, and interactive quizzes."
-              badge="Student Portal"
-              mascotSrc={CLAY_ASSETS.bannerStudentSaturn}
+              title={
+                <EditableContent
+                  configKey="pages.dashboard.studentHero.title"
+                  initialValue={
+                    studentHeroConfig.title ||
+                    `Welcome back, ${displayName || "Scholar"}! ✨`
+                  }
+                  as="span"
+                />
+              }
+              description={
+                <EditableContent
+                  configKey="pages.dashboard.studentHero.description"
+                  initialValue={
+                    studentHeroConfig.description ||
+                    "Track your enrolled classes, scheduled live sessions, and interactive quizzes."
+                  }
+                  as="span"
+                />
+              }
+              badge={
+                <EditableContent
+                  configKey="pages.dashboard.studentHero.badge"
+                  initialValue={studentHeroConfig.badge || "Student Portal"}
+                  as="span"
+                />
+              }
+              mascotConfigKey="pages.dashboard.studentHero.mascot"
+              mascotSrc={studentHeroConfig.mascot || CLAY_ASSETS.bannerStudentSaturn}
               cta={{
-                label: "Browse Classes",
+                label: (
+                  <EditableContent
+                    configKey="pages.dashboard.studentHero.ctaLabel"
+                    initialValue={studentHeroConfig.ctaLabel || "Browse Classes"}
+                    as="span"
+                  />
+                ),
                 href: "/classes",
               }}
               secondaryCta={{
-                label: "Take Quiz",
+                label: (
+                  <EditableContent
+                    configKey="pages.dashboard.studentHero.secondaryCtaLabel"
+                    initialValue={studentHeroConfig.secondaryCtaLabel || "Take Quiz"}
+                    as="span"
+                  />
+                ),
                 href: "/quizzes",
               }}
             />
@@ -152,29 +295,41 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* Marketing Hero (Only for guest visitors on /dashboard) */}
+        {/* Marketing Hero (Only for guest visitors or guest view on /dashboard) */}
         {isGuest && <HeroMarketing isGuest={isGuest} displayName={displayName} />}
 
-        {/* Enrolled Classes (Only for students) */}
+        {/* Next Available Live Session UI (Before showing enrolled classes) */}
         {!isGuest && enrolledClasses.length > 0 && (
+          <NextLiveSessionCard enrolledClasses={enrolledClasses} />
+        )}
+
+        {/* Enrolled Classes (Only for students or staff preview) */}
+        {showEnrolled && (
           <CardSection
             title={
-              <EditableContent
-                configKey="pages.dashboard.sections.enrolled.title"
-                initialValue={pagesConfig.dashboard.sections.enrolled.title}
-              />
+              <div className="flex items-center gap-2">
+                <EditableContent
+                  configKey="pages.dashboard.sections.enrolled.title"
+                  initialValue={activeDashboard?.sections?.enrolled?.title || pagesConfig.dashboard.sections.enrolled.title}
+                />
+                {isStaff && enrolledClasses.length === 0 && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/90 border border-amber-200/80 px-2 py-0.5 rounded-full">
+                    Staff Preview
+                  </span>
+                )}
+              </div>
             }
             description={
               <EditableContent
                 configKey="pages.dashboard.sections.enrolled.description"
-                initialValue={pagesConfig.dashboard.sections.enrolled.description}
+                initialValue={activeDashboard?.sections?.enrolled?.description || pagesConfig.dashboard.sections.enrolled.description}
               />
             }
             icon={pagesConfig.dashboard.sections.enrolled.icon}
             viewAllLabel={
               <EditableContent
                 configKey="pages.dashboard.labels.viewAll"
-                initialValue={pagesConfig.dashboard.labels.viewAll}
+                initialValue={activeDashboard?.labels?.viewAll || pagesConfig.dashboard.labels.viewAll}
               />
             }
             onViewAll={() => router.push("/classes?view=enrolled")}
@@ -183,7 +338,7 @@ export default function StudentDashboard() {
               <SectionLoader />
             ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {enrolledClasses.map((c: any) => (
+                {displayedEnrolled.map((c: any) => (
                   <ClassCard
                     key={c._id}
                     id={c._id}
@@ -200,11 +355,11 @@ export default function StudentDashboard() {
                     ctaLabel={
                       <EditableContent
                         configKey="pages.dashboard.labels.viewClass"
-                        initialValue={pagesConfig.dashboard.labels.viewClass}
+                        initialValue={activeDashboard?.labels?.viewClass || pagesConfig.dashboard.labels.viewClass}
                       />
                     }
                     isEnrolled={true}
-                    hasAccessThisMonth={c.hasAccessThisMonth}
+                    hasAccessThisMonth={c.hasAccessThisMonth ?? true}
                     teacher={c.teacher}
                   />
                 ))}
@@ -218,20 +373,20 @@ export default function StudentDashboard() {
           title={
             <EditableContent
               configKey="pages.dashboard.sections.popular.title"
-              initialValue={pagesConfig.dashboard.sections.popular.title}
+              initialValue={activeDashboard?.sections?.popular?.title || pagesConfig.dashboard.sections.popular.title}
             />
           }
           description={
             <EditableContent
               configKey="pages.dashboard.sections.popular.description"
-              initialValue={pagesConfig.dashboard.sections.popular.description}
+              initialValue={activeDashboard?.sections?.popular?.description || pagesConfig.dashboard.sections.popular.description}
             />
           }
           icon={pagesConfig.dashboard.sections.popular.icon}
           viewAllLabel={
             <EditableContent
               configKey="pages.dashboard.labels.exploreClasses"
-              initialValue={pagesConfig.dashboard.labels.exploreClasses}
+              initialValue={activeDashboard?.labels?.exploreClasses || pagesConfig.dashboard.labels.exploreClasses}
             />
           }
           onViewAll={() => router.push("/classes")}
@@ -257,7 +412,7 @@ export default function StudentDashboard() {
                   ctaLabel={
                     <EditableContent
                       configKey="pages.dashboard.labels.joinClass"
-                      initialValue={pagesConfig.dashboard.labels.joinClass}
+                      initialValue={activeDashboard?.labels?.joinClass || pagesConfig.dashboard.labels.joinClass}
                     />
                   }
                   isEnrolled={enrolledClasses.some(ec => ec._id === c._id)}
@@ -273,13 +428,13 @@ export default function StudentDashboard() {
           title={
             <EditableContent
               configKey="pages.dashboard.sections.quizzes.title"
-              initialValue={pagesConfig.dashboard.sections.quizzes.title}
+              initialValue={activeDashboard?.sections?.quizzes?.title || pagesConfig.dashboard.sections.quizzes.title}
             />
           }
           description={
             <EditableContent
               configKey="pages.dashboard.sections.quizzes.description"
-              initialValue={pagesConfig.dashboard.sections.quizzes.description}
+              initialValue={activeDashboard?.sections?.quizzes?.description || pagesConfig.dashboard.sections.quizzes.description}
             />
           }
           icon={pagesConfig.dashboard.sections.quizzes.icon}
@@ -299,7 +454,7 @@ export default function StudentDashboard() {
         {/* WhatsApp bubble */}
         {/* WhatsApp bubble */}
         <motion.a
-          href="https://wa.me/+94706844133"
+          href={waDashboardLink}
           aria-label="Chat on WhatsApp"
           className="
             fixed right-4
@@ -342,5 +497,13 @@ export default function StudentDashboard() {
         </motion.a>
       </div>
     </>
+  );
+}
+
+export default function StudentDashboard() {
+  return (
+    <Suspense fallback={<SectionLoader />}>
+      <StudentDashboardContent />
+    </Suspense>
   );
 }

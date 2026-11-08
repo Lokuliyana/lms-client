@@ -35,6 +35,19 @@ export async function POST(req: Request) {
 
       fs.writeFileSync(targetFile, JSON.stringify(content, null, 2));
 
+      // Also sync to backend Express API so MongoDB SiteSettings matches
+      try {
+        const origin = process.env.API_ORIGIN || "http://localhost:4002/api";
+        const backendBase = origin.replace(/\/api\/?$/, "");
+        await fetch(`${backendBase}/api/admin/content`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value }),
+        });
+      } catch {
+        // Non-blocking fallback if backend is offline during local compilation
+      }
+
       return NextResponse.json({ success: true, content });
     }
 

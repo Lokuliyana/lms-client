@@ -66,7 +66,11 @@ export const storeService = {
     items: Array<{ product_id: string; quantity: number }>;
     shipping_address: string;
     contact_phone?: string;
+    recipient_name?: string;
     payment_method?: string;
+    payment_proof?: string;
+    payment_slip_name?: string;
+    notes?: string;
   }) => {
     const res = await API.post("/store/checkout", data);
     return res.data;

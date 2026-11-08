@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { studyPackService, IStudyPack } from "@/services/studyPackService";
+import { useRouter } from "next/navigation";
+import { studyPackService, IStudyPack, IStudyPackOrder } from "@/services/studyPackService";
 import { useAuth } from "@/hooks/useAuth";
 import { useTaxonomy } from "@/context/CustomizationContext";
 import { SectionHeader } from "@/components/reusable/section-header";
@@ -10,6 +11,8 @@ import { SectionLoader } from "@/components/reusable/section-loader";
 import EditableContent from "@/components/admin/editable-content";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HybridCheckoutModal } from "@/components/study-packs/hybrid-checkout-modal";
+import { cn } from "@/lib/utils";
 import {
   Video,
   FileText,
@@ -21,25 +24,54 @@ import {
   PlusCircle,
   GraduationCap,
   Sparkles,
+  Lock,
+  Unlock,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function StudyPacksCatalogPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const { subjects, grades } = useTaxonomy();
   const [studyPacks, setStudyPacks] = useState<IStudyPack[]>([]);
+  const [myOrders, setMyOrders] = useState<IStudyPackOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState("all");
 
-  const isStaff = user && ["teacher", "moderator", "admin"].includes(user.role || "");
+  // Checkout modal state
+  const [checkoutPack, setCheckoutPack] = useState<IStudyPack | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  const userRole = String(user?.role || "").toLowerCase().trim();
+  const isStaff = Boolean(user && ["teacher", "moderator", "admin"].includes(userRole));
 
   useEffect(() => {
     fetchStudyPacks();
   }, [selectedGrade, selectedSubject]);
+
+  useEffect(() => {
+    if (user) {
+      studyPackService
+        .getMyOrders()
+        .then((res) => {
+          if (res.success && Array.isArray(res.data)) {
+            setMyOrders(res.data);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user orders:", err);
+        });
+    } else {
+      setMyOrders([]);
+    }
+  }, [user]);
 
   const fetchStudyPacks = async () => {
     try {
@@ -62,6 +94,34 @@ export default function StudyPacksCatalogPage() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchStudyPacks();
+  };
+
+  const handleUnlockPack = (pack: IStudyPack) => {
+    if (!user) {
+      toast.error("Please sign in to unlock and purchase study packs");
+      router.push("/login");
+      return;
+    }
+    setCheckoutPack(pack);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckoutSuccess = (purchaseData: any) => {
+    setIsCheckoutOpen(false);
+    fetchStudyPacks();
+    if (user) {
+      studyPackService
+        .getMyOrders()
+        .then((res) => {
+          if (res.success && Array.isArray(res.data)) {
+            setMyOrders(res.data);
+          }
+        })
+        .catch((err) => console.error(err));
+    }
+    if (purchaseData?.digital_access_unlocked && checkoutPack) {
+      router.push(`/study-packs/${checkoutPack._id}`);
+    }
   };
 
   return (
@@ -107,68 +167,68 @@ export default function StudyPacksCatalogPage() {
           }
         />
 
-        {/* Home Delivery Notice Banner */}
-        <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200 dark:border-blue-900/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
-              <Package className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                Looking for printed tute packs or physical books?
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Study packs here are digital multimedia collections. For printed materials delivered via courier, visit the Physical Store.
-              </p>
-            </div>
-          </div>
-          <Link href="/store" className="shrink-0">
-            <Button size="sm" variant="secondary" className="flex items-center gap-1.5 text-xs font-semibold rounded-xl">
-              <span>Go to Physical Store</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
-        </div>
-
         {/* Filter and Search Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-            <select
-              value={selectedGrade}
-              onChange={(e) => setSelectedGrade(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs md:text-sm font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 outline-none"
-            >
-              <option value="all">All Grades</option>
-              {grades.map((g) => (
-                <option key={g._id} value={g._id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 sm:p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+            <div className="relative">
+              <select
+                value={selectedGrade}
+                onChange={(e) => setSelectedGrade(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 outline-none hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer appearance-none"
+              >
+                <option value="all">All Grades</option>
+                {grades.map((g) => (
+                  <option key={g._id} value={g._id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                ▼
+              </div>
+            </div>
 
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="px-3 py-2 rounded-xl text-xs md:text-sm font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 outline-none"
-            >
-              <option value="all">All Subjects</option>
-              {subjects.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="h-9 pl-3 pr-8 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 outline-none hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer appearance-none"
+              >
+                <option value="all">All Subjects</option>
+                {subjects.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                ▼
+              </div>
+            </div>
+
+            {(selectedGrade !== "all" || selectedSubject !== "all" || search) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedGrade("all");
+                  setSelectedSubject("all");
+                  setSearch("");
+                }}
+                className="h-9 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors shrink-0"
+              >
+                Reset
+              </button>
+            )}
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
+          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72 shrink-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e: any) => setSearch(e.target.value)}
               placeholder="Search study packs..."
-              className="pl-9 rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-sm"
-            >
-            </Input>
+              className="pl-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-xs"
+            />
           </form>
         </div>
 
@@ -209,14 +269,63 @@ export default function StudyPacksCatalogPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
               {studyPacks.map((pack) => {
-                const recordingCount = pack.recordings?.length || 0;
-                const videoCount = pack.custom_videos?.length || 0;
-                const materialCount = pack.materials?.length || 0;
+                const recordingCount =
+                  (pack as any).recordings_count ?? pack.recordings?.length ?? 0;
+                const videoCount =
+                  (pack as any).custom_videos_count ?? pack.custom_videos?.length ?? 0;
+                const materialCount =
+                  (pack as any).materials_count ?? pack.materials?.length ?? 0;
+
+                const packOrder = myOrders.find((o) => {
+                  const pId = (o.study_pack_id as any)?._id || o.study_pack_id;
+                  return String(pId) === String(pack._id);
+                });
+
+                const isCreator = Boolean(
+                  user &&
+                  pack.created_by &&
+                  (String((pack.created_by as any)?._id || pack.created_by) === String((user as any)?._id || (user as any)?.id))
+                );
+
+                const hasApprovedOrder = Boolean(
+                  packOrder &&
+                  packOrder.status !== "cancelled" &&
+                  packOrder.status !== "pending" &&
+                  packOrder.status !== "pending_approval" &&
+                  (packOrder.status === "active" || packOrder.status === "completed") &&
+                  packOrder.digital_access_granted === true
+                );
+
+                // Unlocked ONLY for staff, creator, or student with an active approved database order
+                const isUnlocked = Boolean(
+                  isStaff ||
+                  isCreator ||
+                  (Boolean(user) && hasApprovedOrder)
+                );
+
+                const isPendingVerification = Boolean(
+                  !isUnlocked &&
+                  packOrder &&
+                  packOrder.status !== "cancelled" &&
+                  (packOrder.status === "pending" || packOrder.status === "pending_approval")
+                );
 
                 return (
                   <div
                     key={pack._id}
-                    className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                    onClick={() => {
+                      if (isUnlocked) {
+                        router.push(`/study-packs/${pack._id}`);
+                      } else {
+                        handleUnlockPack(pack);
+                      }
+                    }}
+                    className={cn(
+                      "group bg-white dark:bg-slate-900 rounded-2xl border overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer",
+                      isUnlocked
+                        ? "border-emerald-200/90 dark:border-emerald-900/50 hover:border-emerald-400"
+                        : "border-slate-200 dark:border-slate-800 hover:border-indigo-300"
+                    )}
                   >
                     <div>
                       {/* Image / Thumbnail */}
@@ -234,33 +343,52 @@ export default function StudyPacksCatalogPage() {
                           </div>
                         )}
 
-                        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                          {pack.grade?.name && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/95 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 backdrop-blur-xs shadow-xs">
-                              {pack.grade.name}
-                            </span>
-                          )}
-                          {pack.subject?.name && (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-indigo-600/95 text-white backdrop-blur-xs shadow-xs">
-                              {pack.subject.name}
-                            </span>
+                        {/* Top-Right Access Badge (Clean thumbnail overlay with zero badge collisions) */}
+                        <div className="absolute top-3 right-3 z-10">
+                          {isUnlocked ? (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold bg-emerald-600 text-white shadow-md">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              <span>Unlocked & Ready</span>
+                            </div>
+                          ) : isPendingVerification ? (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold bg-amber-500 text-white shadow-md">
+                              <Clock className="w-3.5 h-3.5 text-white" />
+                              <span>Payment Under Review</span>
+                            </div>
+                          ) : pack.price === 0 ? (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold bg-slate-900/85 text-white border border-white/20 backdrop-blur-md shadow-md">
+                              <Lock className="w-3.5 h-3.5 text-slate-300" />
+                              <span>Locked • Free Access</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold bg-slate-900/85 text-white border border-white/20 backdrop-blur-md shadow-md">
+                              <Lock className="w-3.5 h-3.5 text-slate-300" />
+                              <span>Locked</span>
+                            </div>
                           )}
                         </div>
-
-                        {pack.price === 0 && (
-                          <div className="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                            Free Access
-                          </div>
-                        )}
                       </div>
 
                       {/* Content */}
                       <div className="p-5 space-y-3">
-                        {pack.class_id?.title && (
-                          <span className="text-[11px] font-semibold text-primary block truncate">
-                            Class: {pack.class_id.title}
-                          </span>
-                        )}
+                        {/* Grade, Subject & Class metadata tags */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {pack.grade?.name && (
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700">
+                              {pack.grade.name}
+                            </span>
+                          )}
+                          {pack.subject?.name && (
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/50">
+                              {pack.subject.name}
+                            </span>
+                          )}
+                          {pack.class_id?.title && (
+                            <span className="text-[11px] font-semibold text-primary truncate">
+                              • {pack.class_id.title}
+                            </span>
+                          )}
+                        </div>
 
                         <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                           {pack.title}
@@ -303,12 +431,40 @@ export default function StudyPacksCatalogPage() {
                         </span>
                       </div>
 
-                      <Link href={`/study-packs/${pack._id}`}>
-                        <Button className="flex items-center gap-1.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-medium text-xs px-4 py-2">
-                          <span>View Pack</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                      {/* Purchased packs link inside; unpurchased trigger checkout modal */}
+                      {isUnlocked ? (
+                        <Link
+                          href={`/study-packs/${pack._id}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 shadow-xs transition-all">
+                            <span>Access Study Pack</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Button>
+                        </Link>
+                      ) : isPendingVerification ? (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnlockPack(pack);
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-4 py-2 shadow-xs transition-all"
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Pending Approval</span>
                         </Button>
-                      </Link>
+                      ) : (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnlockPack(pack);
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 shadow-xs transition-all"
+                        >
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Unlock Now</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -316,6 +472,19 @@ export default function StudyPacksCatalogPage() {
             </div>
           )}
         </CardSection>
+
+        {/* Bank Slip Upload Checkout Modal */}
+        {checkoutPack && (
+          <HybridCheckoutModal
+            pack={checkoutPack}
+            isOpen={isCheckoutOpen}
+            onClose={() => {
+              setIsCheckoutOpen(false);
+              setCheckoutPack(null);
+            }}
+            onSuccess={handleCheckoutSuccess}
+          />
+        )}
       </div>
     </div>
   );

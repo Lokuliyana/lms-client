@@ -63,8 +63,8 @@ export const gradeService = {
     return res.data;
   },
 
-  getClassExamResults: async (classId: string) => {
-    const res = await API.get(`/grades/class/${classId}`);
+  getClassExamResults: async (classId: string, params?: { month?: string }) => {
+    const res = await API.get(`/grades/class/${classId}`, { params });
     return res.data;
   },
 

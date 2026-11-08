@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useEditMode } from "@/context/EditModeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useCustomization } from "@/context/CustomizationContext";
 import TextEditor from "@/components/ui/text-editor";
 import { Button } from "@/components/dev/button";
 import { Check, X, Loader2 } from "lucide-react";
@@ -22,6 +24,8 @@ export default function EditableContent({
   as: Component = "div",
 }: EditableContentProps) {
   const { isEditMode } = useEditMode();
+  const { user: authUser, isTeacher } = useAuth();
+  const { refreshCustomization } = useCustomization();
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(initialValue);
   const [tempValue, setTempValue] = useState(initialValue);
@@ -31,7 +35,11 @@ export default function EditableContent({
   const contentEditableRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Check if user is teacher
+    if (isTeacher || authUser?.role === "teacher" || authUser?.role === "admin" || authUser?.role === "moderator") {
+      setCanEdit(true);
+      return;
+    }
+    // Check if user is teacher in localStorage
     try {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -43,7 +51,7 @@ export default function EditableContent({
     } catch (e) {
       console.error("Failed to parse user from local storage", e);
     }
-  }, []);
+  }, [authUser, isTeacher]);
 
   useEffect(() => {
     setValue(initialValue);

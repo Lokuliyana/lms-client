@@ -26,7 +26,8 @@ export type QuestionType =
   | "fill-blank"
   | "multiple-select"
   | "slider"
-  | "drag-drop";
+  | "drag-drop"
+  | "numeric";
 
 export type QuestionPayload = {
   type: QuestionType;
@@ -36,6 +37,7 @@ export type QuestionPayload = {
   correct_answer: string | number | boolean | (string | number)[];
   explanation?: string;
   marks: number;
+  tolerance?: number;
   sliderRange?: { min: number; max: number; step: number };
   dragItems?: { items: string[]; matches: string[] };
   image?: string;
@@ -51,6 +53,7 @@ export type SafeQuestion = {
   options?: string[];
   image?: string | null;
   marks: number;
+  tolerance?: number;
   sliderRange?: { min: number; max: number; step: number };
   dragItems?: { items: string[]; matches: string[] };
 };
@@ -104,6 +107,10 @@ export type QuizSubmissionPayload = {
     answer: string | number | boolean | (string | number)[];
     time_ms?: number; // optional per-question time (ms)
   }[];
+  telemetry?: {
+    tabSwitches?: number;
+    blurDurationMs?: number;
+  };
 };
 
 export type ChallengeMode = "live" | "async";
@@ -260,6 +267,7 @@ export const submitQuiz = async (payload: QuizSubmissionPayload) => {
   const { data } = await API.post(`/quizzes/${payload.quizId}/submit`, {
     answers: payload.answers,
     time_spent: payload.time_spent,
+    telemetry: payload.telemetry,
   });
   return data as { message: string; submission: { _id: string } };
 };

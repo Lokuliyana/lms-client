@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image, { ImageProps } from "next/image";
 import { useEditMode } from "@/context/EditModeContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useCustomization } from "@/context/CustomizationContext";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +41,8 @@ export default function EditableImage({
   ...imageProps
 }: EditableImageProps) {
   const { isEditMode } = useEditMode();
+  const { user: authUser, isTeacher } = useAuth();
+  const { refreshCustomization } = useCustomization();
   const [src, setSrc] = useState(initialValue);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -55,6 +59,10 @@ export default function EditableImage({
   }, [initialValue]);
 
   useEffect(() => {
+    if (isTeacher || authUser?.role === "teacher" || authUser?.role === "admin" || authUser?.role === "moderator") {
+      setCanEdit(true);
+      return;
+    }
     // Check if user is teacher
     try {
       const storedUser = localStorage.getItem("user");
@@ -67,7 +75,7 @@ export default function EditableImage({
     } catch (e) {
       console.error("Failed to parse user from local storage", e);
     }
-  }, []);
+  }, [authUser, isTeacher]);
 
   const handleImageClick = (e: React.MouseEvent) => {
     if (isEditMode && canEdit) {
@@ -136,6 +144,7 @@ export default function EditableImage({
       setIsDialogOpen(false);
       setSelectedFile(null);
       setZoom(1);
+      refreshCustomization();
       
       toast({
         title: "Image updated",

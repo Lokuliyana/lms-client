@@ -317,6 +317,14 @@ export const getPagesConfig = (settings: any) => ({
   },
   dashboard: {
     metadata: settings?.pages?.dashboard?.metadata || content.pages.dashboard.metadata,
+    studentHero: {
+      ...((content.pages.dashboard as any)?.studentHero || {}),
+      ...(settings?.pages?.dashboard?.studentHero || {}),
+    },
+    guestHero: {
+      ...((content.pages.dashboard as any)?.guestHero || {}),
+      ...(settings?.pages?.dashboard?.guestHero || {}),
+    },
     sections: {
       enrolled: {
         ...(settings?.pages?.dashboard?.sections?.enrolled || content.pages.dashboard.sections.enrolled),

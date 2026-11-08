@@ -13,7 +13,10 @@ export function DetailLoader() {
 
       {/* Content Skeleton */}
       <div className="space-y-6">
-        <Skeleton className="h-[300px] w-full rounded-2xl" />
+        <Skeleton
+          className="w-full aspect-video min-h-[320px] sm:min-h-[440px] md:min-h-[500px] rounded-2xl"
+          style={{ minHeight: "360px", aspectRatio: "16 / 9" }}
+        />
         <div className="space-y-4">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />

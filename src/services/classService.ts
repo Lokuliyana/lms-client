@@ -7,6 +7,10 @@ import {
   deleteClass,
   getMyEnrolledClasses,
   getAllClassesWithStudents,
+  getEnrolledStudents,
+  revokeStudentAccess,
+  getCandidateStudents,
+  manualEnrollStudents,
 } from "./class/classCrudService";
 
 export * from "./class/classCrudService";
@@ -27,6 +31,10 @@ export const classService = {
   deleteClass,
   getMyEnrolledClasses,
   getAllClassesWithStudents,
+  getEnrolledStudents,
+  revokeStudentAccess,
+  getCandidateStudents,
+  manualEnrollStudents,
 };
 
 export default classService;

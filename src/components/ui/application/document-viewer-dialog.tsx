@@ -25,6 +25,8 @@ interface DocumentViewerDialogProps {
   onClose: () => void;
   document: Document;
   studentName: string;
+  studentEmail?: string;
+  studentPhone?: string;
   className: string;
   onApprove: (message?: string) => void;
   onReject: (reason: string) => void;
@@ -35,6 +37,8 @@ export function DocumentViewerDialog({
   onClose,
   document,
   studentName,
+  studentEmail,
+  studentPhone,
   className,
   onApprove,
   onReject,
@@ -104,11 +108,12 @@ export function DocumentViewerDialog({
           <div className="flex-1 bg-slate-100/50 relative overflow-hidden flex flex-col">
             <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-8 overflow-auto">
               {document.type === "image" ? (
-                <div className="relative w-full h-full max-w-4xl max-h-full shadow-lg rounded-lg overflow-hidden bg-white border border-slate-200">
+                <div className="relative w-full h-full max-w-4xl max-h-full shadow-lg rounded-lg overflow-hidden bg-white border border-slate-200 flex items-center justify-center p-2">
                   <Image
                     src={document.url || "/placeholder.jpg"}
                     alt={document.name}
                     fill
+                    unoptimized
                     className="object-contain"
                     sizes="(max-width: 1024px) 100vw, 80vw"
                   />
@@ -133,6 +138,33 @@ export function DocumentViewerDialog({
           {/* Sidebar / Actions Panel */}
           <div className="w-full lg:w-80 bg-white border-l border-slate-200 flex flex-col shrink-0">
             <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+              {/* Applicant Details */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Applicant Details</h4>
+                <div className="bg-slate-50 rounded-xl p-4 space-y-2.5 border border-slate-100 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Student Name</span>
+                    <span className="font-semibold text-slate-800">{studentName}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Applying For Class</span>
+                    <span className="font-semibold text-slate-800">{className}</span>
+                  </div>
+                  {studentEmail && studentEmail !== "—" && (
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Email</span>
+                      <span className="font-mono text-slate-600 truncate block">{studentEmail}</span>
+                    </div>
+                  )}
+                  {studentPhone && studentPhone !== "—" && (
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold block">Contact Phone</span>
+                      <span className="font-mono text-slate-600">{studentPhone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* File Info */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">File Details</h4>

@@ -29,6 +29,7 @@ import {
   Package,
   User as UserIcon,
   X,
+  Globe,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import { useEditMode } from "@/context/EditModeContext";
@@ -179,7 +180,21 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
   }, [subjects]);
 
   const isLinkActive = (href: string) => {
-    if (href === "/dashboard" || href === "/admin/dashboard") {
+    if (href === "/admin/dashboard") {
+      return pathname === href;
+    }
+    if (href === "/dashboard?view=student") {
+      return (
+        pathname === "/dashboard" &&
+        (!searchParams?.get("view") || searchParams?.get("view") === "student")
+      );
+    }
+    if (href === "/dashboard?view=guest") {
+      return (
+        pathname === "/dashboard" && searchParams?.get("view") === "guest"
+      );
+    }
+    if (href === "/dashboard") {
       return pathname === href;
     }
     if (href === "/classes") {
@@ -350,28 +365,79 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
         {/* UNIVERSAL TOP SECTION: DASHBOARD & ABOUT PLATFORM */}
         <div className="space-y-1 pb-1">
           <ul className="space-y-0.5">
-            <li>
-              <Link
-                href={isStaff ? "/admin/dashboard" : "/dashboard"}
-                onClick={() => onCloseMobile?.()}
-                className={cn(
-                  "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
-                  (pathname === "/dashboard" || pathname === "/admin/dashboard")
-                    ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
-                )}
-              >
-                <LayoutDashboard
+            {isStaff ? (
+              <>
+                <li>
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => onCloseMobile?.()}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
+                      pathname === "/admin/dashboard"
+                        ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                    )}
+                  >
+                    <LayoutDashboard
+                      className={cn(
+                        "w-4 h-4 transition-colors",
+                        pathname === "/admin/dashboard"
+                          ? "text-indigo-600"
+                          : "text-slate-400 group-hover:text-slate-600"
+                      )}
+                    />
+                    <span className="flex-1 truncate">
+                      {isTeacherRole ? "Teacher Dashboard" : "Admin Dashboard"}
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/dashboard?view=guest"
+                    onClick={() => onCloseMobile?.()}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
+                      pathname === "/dashboard" && searchParams?.get("view") === "guest"
+                        ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                    )}
+                  >
+                    <Globe
+                      className={cn(
+                        "w-4 h-4 transition-colors",
+                        pathname === "/dashboard" && searchParams?.get("view") === "guest"
+                          ? "text-indigo-600"
+                          : "text-slate-400 group-hover:text-slate-600"
+                      )}
+                    />
+                    <span className="flex-1 truncate">Guest Dashboard</span>
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link
+                  href="/dashboard"
+                  onClick={() => onCloseMobile?.()}
                   className={cn(
-                    "w-4 h-4 transition-colors",
-                    (pathname === "/dashboard" || pathname === "/admin/dashboard")
-                      ? "text-indigo-600"
-                      : "text-slate-400 group-hover:text-slate-600"
+                    "flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all group",
+                    pathname === "/dashboard"
+                      ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
                   )}
-                />
-                <span className="flex-1 truncate">Dashboard</span>
-              </Link>
-            </li>
+                >
+                  <LayoutDashboard
+                    className={cn(
+                      "w-4 h-4 transition-colors",
+                      pathname === "/dashboard"
+                        ? "text-indigo-600"
+                        : "text-slate-400 group-hover:text-slate-600"
+                    )}
+                  />
+                  <span className="flex-1 truncate">Dashboard</span>
+                </Link>
+              </li>
+            )}
             <li>
               <Link
                 href="/about"
@@ -831,8 +897,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           </div>
         </a>
 
-        {/* Edit Mode Toggle for Instructors */}
-        {isTeacher && (
+        {/* Edit Mode Toggle for Staff & Instructors */}
+        {(isTeacher || isStaff) && (
           <button
             type="button"
             onClick={toggleEditMode}

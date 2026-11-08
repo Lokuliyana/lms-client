@@ -10,6 +10,7 @@ import { Badge } from "@/components/dev/badge";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { deleteRecording, getRecordingsByClass } from "@/services/recordingService";
+import { extractYouTubeId } from "@/components/ui/secure-video-player";
 import { EmptyCard } from "./empty-card";
 import { CLAY_ASSETS } from "@/constants/clayAssets";
 
@@ -33,6 +34,7 @@ export interface RecordingDto {
 interface ClassRecordingsProps {
   recordings?: RecordingDto[];
   classId?: string;
+  isEnrolled?: boolean;
 }
 
 const dateFmt = new Intl.DateTimeFormat(undefined, {
@@ -123,29 +125,21 @@ export function ClassRecordings({ recordings, classId }: ClassRecordingsProps) {
         const dateLabel = session ? dateFmt.format(session) : "Not set";
         const isDeleting = deletingId === r._id;
 
-        // Extract file ID for thumbnail
-        let fileId = (r as any).driveFileId || (r as any).video_url;
-        if (!fileId && (r as any).driveUrl) {
-            const driveMatch = (r as any).driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (driveMatch) {
-              fileId = driveMatch[1];
-            } else {
-              const driveMatch2 = (r as any).driveUrl.match(/id=([a-zA-Z0-9_-]+)/);
-              if (driveMatch2) fileId = driveMatch2[1];
-            }
+        // Robust thumbnail extraction for YouTube and Drive
+        const rawVideo = (r as any).driveFileId || (r as any).video_url || (r as any).driveUrl || (r as any).playback_url || "";
+        const ytId = extractYouTubeId(rawVideo);
 
-            // YouTube extraction if not Drive
-            if (!fileId) {
-              const ytMatch = (r as any).driveUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-              if (ytMatch) fileId = ytMatch[1];
-            }
+        let driveId: string | null = null;
+        if (!ytId && typeof rawVideo === "string") {
+          const driveMatch = rawVideo.match(/\/d\/([a-zA-Z0-9_-]+)/) || rawVideo.match(/id=([a-zA-Z0-9_-]+)/);
+          if (driveMatch) driveId = driveMatch[1];
+          else if (/^[a-zA-Z0-9_-]{25,}$/.test(rawVideo.trim())) driveId = rawVideo.trim();
         }
 
-        const isYouTube = fileId?.length === 11;
-        const thumbnailUrl = isYouTube
-          ? `https://img.youtube.com/vi/${fileId}/mqdefault.jpg`
-          : fileId
-          ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`
+        const thumbnailUrl = ytId
+          ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`
+          : driveId
+          ? `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`
           : null;
 
         return (

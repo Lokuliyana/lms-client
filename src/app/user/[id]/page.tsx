@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/dev/textarea";
 import { Card } from "@/components/dev/card";
 import { Badge } from "@/components/dev/badge";
-import { Avatar, AvatarFallback } from "@/components/dev/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/dev/avatar";
 import { 
   User, 
   Mail, 
@@ -37,7 +37,8 @@ import {
   Sparkles,
   ChevronRight,
   KeyRound,
-  Key
+  Key,
+  Lock
 } from "lucide-react";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,58 +47,28 @@ import { toast } from "@/hooks/use-toast";
 type Role = "student" | "teacher" | "moderator" | string;
 
 function mapUserToForm(user: any) {
-  const role: Role = user?.role || "";
-  const base = {
-    full_name: user?.full_name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-  };
-
-  if (role === "student") {
-    return {
-      role,
-      form: {
-        ...base,
-        school: user?.school || "",
-        grade: user?.grade || "",
-        birth_date: user?.birth_date
-          ? String(user.birth_date).slice(0, 10)
-          : "",
-        ol_year: user?.ol_year ? String(user.ol_year) : "",
-        al_year: user?.al_year ? String(user.al_year) : "",
-        bio: "",
-        qualifications: "",
-      },
-    };
-  }
-
-  if (role === "teacher" ) {
-    return {
-      role,
-      form: {
-        ...base,
-        bio: user?.bio || "",
-        qualifications: user?.qualifications || "",
-        school: "",
-        grade: "",
-        birth_date: "",
-        ol_year: "",
-        al_year: "",
-      },
-    };
-  }
+  const role: Role = String(user?.role || "").toLowerCase();
+  const computedFullName =
+    user?.full_name ||
+    user?.fullName ||
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
+    user?.email ||
+    "";
 
   return {
-    role,
+    role: role || "student",
     form: {
-      ...base,
-      school: "",
-      grade: "",
-      birth_date: "",
-      ol_year: "",
-      al_year: "",
-      bio: "",
-      qualifications: "",
+      full_name: computedFullName,
+      email: user?.email || "",
+      phone: user?.phone || "",
+      avatar: user?.avatar || user?.avatar_url || "",
+      school: user?.school || "",
+      grade: user?.grade || "",
+      birth_date: user?.birth_date ? String(user.birth_date).slice(0, 10) : "",
+      ol_year: user?.ol_year ? String(user.ol_year) : "",
+      al_year: user?.al_year ? String(user.al_year) : "",
+      bio: user?.bio || "",
+      qualifications: user?.qualifications || "",
     },
   };
 }
@@ -107,9 +78,13 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = params?.id as string;
 
-  const { isTeacher, isModerator, user: currentUser, logout } = useAuth();
-  const canResetPassword = isTeacher || isModerator;
-  const isOwnProfile = currentUser?._id === userId;
+  const { isTeacher, isModerator, user: currentUser, logout, hasPermission, loading: authLoading } = useAuth();
+  const canResetPassword = isTeacher || isModerator || hasPermission("users.update");
+  const isOwnProfile = Boolean(
+    currentUser &&
+    (currentUser._id === userId || currentUser.id === userId || currentUser.user_id === userId)
+  );
+  const canEdit = isOwnProfile || canResetPassword;
 
   const [loadingUser, setLoadingUser] = useState(true);
   const [submittingReset, setSubmittingReset] = useState(false);
@@ -117,10 +92,12 @@ export default function ProfilePage() {
   const [availableRoles, setAvailableRoles] = useState<any[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [updatingRole, setUpdatingRole] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({
     full_name: "",
     email: "",
     phone: "",
+    avatar: "",
     school: "",
     grade: "",
     birth_date: "",
@@ -156,7 +133,7 @@ export default function ProfilePage() {
       try {
         setLoadingUser(true);
         const res: any = await authService.getUserById(userId);
-        const u = res?.data?.user ?? res?.data ?? res;
+        const u = res?.data?.user ?? res?.data?.data ?? res?.data ?? res;
 
         if (!u || typeof u !== "object")
           throw new Error("Invalid user payload");
@@ -166,7 +143,8 @@ export default function ProfilePage() {
           setUserRole(mapped.role);
           setForm(mapped.form);
           if (u.role_ids && u.role_ids.length > 0) {
-            setSelectedRoleId(u.role_ids[0]);
+            const firstRole = u.role_ids[0];
+            setSelectedRoleId(typeof firstRole === "object" ? firstRole._id || String(firstRole) : String(firstRole));
           }
         }
         // Also fetch roles if not own profile and can edit
@@ -192,6 +170,14 @@ export default function ProfilePage() {
       cancelled = true;
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (!isOwnProfile && canResetPassword && availableRoles.length === 0) {
+      authService.getRoles()
+        .then((rolesRes) => setAvailableRoles(rolesRes.data?.data || []))
+        .catch((e) => console.error("Failed to fetch roles", e));
+    }
+  }, [isOwnProfile, canResetPassword, availableRoles.length]);
 
   const handleChange = (key: string, value: string) => {
     setForm((prev: any) => ({ ...prev, [key]: value }));
@@ -286,48 +272,58 @@ export default function ProfilePage() {
   };
 
   const payload = useMemo(() => {
-    const common = {
-      full_name: form.full_name?.trim(),
-      phone: form.phone?.trim(),
+    return {
+      full_name: form.full_name?.trim() || "",
+      phone: form.phone?.trim() || "",
+      avatar: form.avatar?.trim() || "",
+      school: form.school?.trim() || "",
+      grade: form.grade || "",
+      birth_date: form.birth_date || "",
+      ol_year: form.ol_year ? String(form.ol_year) : "",
+      al_year: form.al_year ? String(form.al_year) : "",
+      bio: form.bio?.trim() || "",
+      qualifications: form.qualifications?.trim() || "",
     };
-
-    if (userRole === "student") {
-      return {
-        ...common,
-        school: form.school?.trim() || undefined,
-        grade: form.grade || undefined,
-        birth_date: form.birth_date || undefined,
-        ol_year: form.ol_year ? Number(form.ol_year) : undefined,
-        al_year: form.al_year ? Number(form.al_year) : undefined,
-      };
-    }
-
-    if (userRole === "teacher") {
-      return {
-        ...common,
-        bio: form.bio?.trim() || undefined,
-        qualifications: form.qualifications?.trim() || undefined,
-      };
-    }
-
-    return common;
-  }, [form, userRole]);
+  }, [form]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canEdit) {
+      toast({
+        title: "Access Restricted",
+        description: "You do not have permission to edit this profile.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
-      await authService.editUser(userId, payload);
+      setSaving(true);
+      const res: any = await authService.editUser(userId, payload);
+      const updated = res?.data?.data || res?.data?.user || res?.data;
+      if (updated && typeof updated === "object") {
+        const mapped = mapUserToForm(updated);
+        setForm(mapped.form);
+        if (mapped.role) setUserRole(mapped.role);
+        if (isOwnProfile && typeof window !== "undefined") {
+          try {
+            const currentStored = JSON.parse(localStorage.getItem("user") || "{}");
+            localStorage.setItem("user", JSON.stringify({ ...currentStored, ...updated, full_name: mapped.form.full_name }));
+          } catch (e) {}
+        }
+      }
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast({
         title: "Error",
-        description: "Failed to update profile.",
+        description: err?.response?.data?.message || "Failed to update profile.",
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -420,7 +416,10 @@ export default function ProfilePage() {
         >
           <div className="p-4 sm:p-6 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-slate-200/90 shadow-xs shrink-0">
+              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-slate-200/90 shadow-xs shrink-0 overflow-hidden">
+                {form.avatar && (
+                  <AvatarImage src={form.avatar} alt={form.full_name} className="object-cover" />
+                )}
                 <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-indigo-50 text-indigo-700">
                   {initials}
                 </AvatarFallback>
@@ -617,15 +616,29 @@ export default function ProfilePage() {
             </div>
           </CardSection>
 
-          <div className="flex justify-end pt-1">
-            <Button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-8 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Save Profile Changes
-            </Button>
-          </div>
+          {canEdit ? (
+            <div className="flex justify-end pt-1">
+              <Button
+                type="submit"
+                disabled={saving}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 px-8 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-2 disabled:opacity-70"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {saving ? "Saving Changes..." : "Save Profile Changes"}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex justify-end pt-1">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                <Lock className="w-3.5 h-3.5 text-slate-400" />
+                Viewing in Read-Only Mode
+              </span>
+            </div>
+          )}
         </form>
 
         {/* Card 4: Security & Password Change */}

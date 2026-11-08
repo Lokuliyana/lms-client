@@ -53,6 +53,10 @@ export default function QuizReviewPage() {
     );
   }
 
+  // Convert timeSpent (minutes from backend API or seconds) safely
+  const rawTime = reviewData.timeSpent || 0;
+  const timeSpentSec = rawTime > 0 && rawTime < 60 ? rawTime * 60 : rawTime;
+
   return (
     <QuizReview
       questions={reviewData.questions}
@@ -60,7 +64,7 @@ export default function QuizReviewPage() {
       score={reviewData.score}
       maxScore={(reviewData as any).maxScore}
       percent={(reviewData as any).percent}
-      timeSpent={reviewData.timeSpent}
+      timeSpent={timeSpentSec}
     />
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/components/dev/card";
 import { Calendar, Clock, Video } from "lucide-react";
 import { format } from "date-fns";
+import { SecureVideoPlayer, extractYouTubeId } from "@/components/ui/secure-video-player";
 
 type Props = {
   title?: string;
@@ -86,15 +87,35 @@ export default function RecordedClass({
   const [forbiddenInfo, setForbiddenInfo] = useState<string | null>(null);
   const aliveRef = useRef(true);
 
+  const ytId = extractYouTubeId(driveFileId);
+  const isYouTube = Boolean(ytId);
+
   const uploadedAtDate =
     uploaded_at instanceof Date ? uploaded_at : new Date(uploaded_at);
   const validDate = Number.isFinite(uploadedAtDate.getTime());
 
   useEffect(() => {
     aliveRef.current = true;
-    setVideoSrc(null);
     setErr(null);
     setForbiddenInfo(null);
+
+    // 1. YouTube link / ID: no server proxy ticket required
+    if (isYouTube) {
+      setVideoSrc(ytId || driveFileId);
+      return;
+    }
+
+    // 2. Direct local upload or external video file (.mp4, /uploads/)
+    if (
+      typeof driveFileId === "string" &&
+      (driveFileId.startsWith("/uploads/") ||
+        (driveFileId.startsWith("http") && !driveFileId.includes("drive.google.com")))
+    ) {
+      setVideoSrc(driveFileId);
+      return;
+    }
+
+    setVideoSrc(null);
 
     (async () => {
       try {
@@ -175,12 +196,7 @@ export default function RecordedClass({
     return () => {
       aliveRef.current = false;
     };
-  }, [driveFileId, useServerGate, uploaded_at]);
-
-  const isPublicPreview = videoSrc?.startsWith("https://drive.google.com/uc?");
-  // YouTube video IDs are exactly 11 characters long. Google Drive IDs are 33 characters.
-  const isYouTube = driveFileId?.length === 11;
-  const youtubeEmbedSrc = isYouTube ? `https://www.youtube-nocookie.com/embed/${driveFileId}?rel=0&modestbranding=1&controls=1&showinfo=0&fs=0` : "";
+  }, [driveFileId, useServerGate, uploaded_at, isYouTube, ytId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 flex items-center justify-center">
@@ -205,9 +221,23 @@ export default function RecordedClass({
         </CardHeader>
 
         <CardContent className="p-6 pt-0">
-          <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-lg">
-            {!videoSrc ? (
-              <div className="w-full h-full grid place-items-center text-white/80 px-6 text-center">
+          <div
+            style={{ minHeight: "360px", aspectRatio: "16 / 9" }}
+            className="relative w-full aspect-video min-h-[320px] sm:min-h-[440px] md:min-h-[500px] bg-black rounded-xl overflow-hidden shadow-2xl"
+          >
+            {isYouTube ? (
+              <SecureVideoPlayer
+                url={ytId || driveFileId}
+                title={title ?? "Class Recording"}
+                badgeLabel="Classroom Recording"
+                autoPlay={false}
+                className="w-full h-full"
+              />
+            ) : !videoSrc ? (
+              <div
+                style={{ minHeight: "360px", aspectRatio: "16 / 9" }}
+                className="w-full h-full min-h-[320px] sm:min-h-[440px] md:min-h-[500px] grid place-items-center text-white/80 px-6 text-center"
+              >
                 {forbiddenInfo ? (
                   <div>
                     <p className="text-base font-semibold">{forbiddenInfo}</p>
@@ -229,39 +259,13 @@ export default function RecordedClass({
                   </div>
                 )}
               </div>
-            ) : isPublicPreview || isYouTube ? (
-              // Fallback: Google HTML player or YouTube player via iframe
-              <iframe
-                key={isYouTube ? youtubeEmbedSrc : videoSrc}
-                title={title ?? "Video player"}
-                src={isYouTube ? youtubeEmbedSrc : videoSrc!}
-                className="w-full h-full block"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ border: 0 }}
-              />
             ) : (
-              // Main: signed byte stream from your backend
-              <video
-                key={videoSrc}
-                src={videoSrc}
-                controls
-                className="block w-full h-full"
-                preload="metadata"
-                controlsList="nodownload noplaybackrate"
-                disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()}
-                onError={() => {
-                  // If backend ever 302s to HTML, swap to iframe only when gate disabled
-                  if (!useServerGate) {
-                    const preview = getDrivePreviewIframeSrc(driveFileId);
-                    setErr("Secure stream fell back to preview.");
-                    setVideoSrc(preview);
-                  } else {
-                    setErr("Playback error. Please try again.");
-                    setVideoSrc(null);
-                  }
-                }}
+              <SecureVideoPlayer
+                url={videoSrc}
+                title={title ?? "Class Recording"}
+                badgeLabel="Classroom Stream"
+                autoPlay={false}
+                className="w-full h-full"
               />
             )}
           </div>

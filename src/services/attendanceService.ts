@@ -73,16 +73,24 @@ export const attendanceService = {
     return res.data;
   },
 
-  getClassAttendance: async (classId: string, from?: string, to?: string) => {
+  getClassAttendance: async (classId: string, fromOrMonth?: string | { from?: string; to?: string; month?: string }, to?: string) => {
     const params: any = {};
-    if (from) params.from = from;
-    if (to) params.to = to;
+    if (fromOrMonth && typeof fromOrMonth === "object") {
+      Object.assign(params, fromOrMonth);
+    } else if (typeof fromOrMonth === "string") {
+      if (/^\d{4}-\d{2}$/.test(fromOrMonth)) {
+        params.month = fromOrMonth;
+      } else {
+        params.from = fromOrMonth;
+        if (to) params.to = to;
+      }
+    }
     const res = await API.get(`/attendance/class/${classId}`, { params });
     return res.data;
   },
 
-  getClassAttendanceStats: async (classId: string) => {
-    const res = await API.get(`/attendance/class/${classId}/stats`);
+  getClassAttendanceStats: async (classId: string, params?: { month?: string; from?: string; to?: string }) => {
+    const res = await API.get(`/attendance/class/${classId}/stats`, { params });
     return res.data;
   },
 

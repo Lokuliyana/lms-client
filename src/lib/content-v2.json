@@ -325,6 +325,48 @@
         "ogImage": "https://www.nexvolearn.com/og/student-dashboard.jpg",
         "url": "https://www.nexvolearn.com/dashboard"
       },
+      "studentHero": {
+        "badge": "Student Portal",
+        "title": "Welcome back, Scholar! ✨",
+        "description": "Track your enrolled classes, scheduled live sessions, and interactive quizzes.",
+        "mascot": "/assets/clay/saturn.png",
+        "ctaLabel": "Browse Classes",
+        "secondaryCtaLabel": "Take Quiz"
+      },
+      "guestHero": {
+        "badge": "Official Website • Lead STEM Educator",
+        "title": "Master Mathematics & Science",
+        "subtitle": "Empowering Minds Through Conceptual Clarity, Scientific Logic & Exam Mastery",
+        "bio": "Dedicated STEM educator and scholar with over a decade of proven teaching excellence. Empowering Sri Lankan students from Grade 6 to O/L to conquer Mathematics and Science through deep conceptual clarity, rational logic, and structured exam strategies.",
+        "bullet1": "Online වුණත් Physical වගේම උගන්වන ශ්‍රී ලංකාවේ ප්‍රමුඛතම විභාග කේන්ද්‍රීය ගණිතය සහ විද්‍යාව පන්තිය...",
+        "image": "/images/About.jpg",
+        "instructorBadge": "Lead Educator & Founder",
+        "instructorName": "Danidu Lokuliyana",
+        "instructorRole": "STEM Faculty & Exam Coach",
+        "instructorRoleBottom": "Faculty of Science & Mathematics",
+        "instructorExp": "10+ Years Teaching Experience",
+        "instructorDegree": "B.Sc. Eng (Hons) Undergraduate",
+        "qualificationItem1": "STEM & Theory Revision",
+        "qualificationItem2": "National Curriculum Coach",
+        "ctaJoinLabel": "Join My Classes",
+        "ctaBrowseLabel": "Browse Catalog",
+        "ctaWaLabel": "Ask Teacher",
+        "ctaContinueLabel": "Continue Learning",
+        "aboutLinkLabel": "Read Teacher's Full Story & Credentials →",
+        "stats": {
+          "students": "1,250+",
+          "studentsLabel": "Enrolled Scholars",
+          "passRate": "98.6%",
+          "passRateLabel": "District Pass Rate",
+          "replays": "24/7",
+          "replaysLabel": "HD Replays & Notes"
+        },
+        "sessionWidget": {
+          "title": "Science & Mathematics • Theory & Paper Revision",
+          "time": "Today at 6:30 PM – 8:30 PM (IST)",
+          "buttonLabel": "Join"
+        }
+      },
       "sections": {
         "enrolled": {
           "title": "My Enrolled Classes",

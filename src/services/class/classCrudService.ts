@@ -21,6 +21,9 @@ export type ClassPayload = {
   start_date?: string;
   end_date?: string;
   created_by?: string;
+  zoom_meeting_id?: string;
+  zoom_join_url?: string;
+  zoom_start_url?: string;
 };
 
 export type ApplicationStatus = "pending" | "approved" | "rejected";
@@ -204,6 +207,9 @@ export const createClass = async (classData: ClassPayload | any) => {
     start_date: classData.start_date,
     end_date: classData.end_date,
     created_by: classData.created_by,
+    zoom_meeting_id: classData.zoom_meeting_id,
+    zoom_join_url: classData.zoom_join_url,
+    zoom_start_url: classData.zoom_start_url,
   };
 
   const { data } = await API.post('/classes', payload);
@@ -556,10 +562,59 @@ export const getMyEnrolledClasses = async () => {
   }
 };
 
-const createMeetingTicket = async (classId: string, mode: 'join' | 'start') => {
+const createMeetingTicket = async (classId: string, mode: 'join' | 'start', sessionType?: 'regular' | 'special') => {
   const { data } = await API.post<{ ticket: string; redirect: string }>('/meetings/ticket', {
     classId,
     mode,
+    sessionType,
   });
   return Array.isArray(data) ? data : (data as any).data || data;
+};
+
+export const getEnrolledStudents = async (classId: string, month?: string) => {
+  try {
+    const url = month && month !== 'all'
+      ? `/classes/${classId}/students?month=${encodeURIComponent(month)}`
+      : `/classes/${classId}/students`;
+    const res = await API.get(url);
+    return res.data?.data || res.data?.students || (Array.isArray(res.data) ? res.data : []);
+  } catch (error) {
+    console.error("Error fetching enrolled students:", error);
+    return [];
+  }
+};
+
+export const revokeStudentAccess = async (classId: string, studentId: string, month?: string) => {
+  const url = month && month !== 'all'
+    ? `/classes/${classId}/students/${studentId}/revoke?month=${encodeURIComponent(month)}`
+    : `/classes/${classId}/students/${studentId}/revoke`;
+  const res = await API.post(url);
+  return res.data;
+};
+
+export const getCandidateStudents = async (
+  classId: string,
+  params?: { search?: string; birthYear?: number; age?: number; ageOrYear?: string | number }
+) => {
+  const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
+  if (params?.birthYear) query.set("birthYear", String(params.birthYear));
+  if (params?.age) query.set("age", String(params.age));
+  if (params?.ageOrYear) query.set("ageOrYear", String(params.ageOrYear));
+
+  const url = `/classes/${classId}/candidates${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await API.get(url);
+  return res.data?.data || [];
+};
+
+export const manualEnrollStudents = async (
+  classId: string,
+  studentIds: string[],
+  month?: string
+) => {
+  const res = await API.post(`/classes/${classId}/manual-enroll`, {
+    studentIds,
+    month: month && month !== "all" ? month : undefined,
+  });
+  return res.data;
 };

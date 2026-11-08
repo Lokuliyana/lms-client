@@ -6,20 +6,22 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CLAY_ASSETS } from "@/constants/clayAssets";
+import EditableImage from "@/components/admin/editable-image";
 
 export interface ClayHeroBannerProps {
   title: React.ReactNode;
   description?: React.ReactNode;
   badge?: React.ReactNode;
   mascotSrc?: string;
+  mascotConfigKey?: string;
   cta?: {
-    label: string;
+    label: React.ReactNode;
     href?: string;
     onClick?: () => void;
     icon?: React.ComponentType<{ className?: string }>;
   };
   secondaryCta?: {
-    label: string;
+    label: React.ReactNode;
     href?: string;
     onClick?: () => void;
   };
@@ -32,6 +34,7 @@ export function ClayHeroBanner({
   description,
   badge,
   mascotSrc = CLAY_ASSETS.bannerStudentSaturn,
+  mascotConfigKey,
   cta,
   secondaryCta,
   className,
@@ -71,27 +74,23 @@ export function ClayHeroBanner({
       <div className="relative z-10 flex-1 pr-3 sm:pr-6 max-w-xl">
         {badge && (
           <div className="mb-1 sm:mb-2 inline-flex items-center">
-            {typeof badge === "string" ? (
-              <span
-                className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border backdrop-blur-xs bg-white/90 text-indigo-800 border-indigo-200/80 shadow-xs"
-                style={{
-                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9)',
-                }}
-              >
-                {badge}
-              </span>
-            ) : (
-              badge
-            )}
+            <span
+              className="px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold border backdrop-blur-xs bg-white/90 text-indigo-800 border-indigo-200/80 shadow-xs inline-flex items-center"
+              style={{
+                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9)',
+              }}
+            >
+              {badge}
+            </span>
           </div>
         )}
 
-        <h1 className="text-base sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-snug line-clamp-1 sm:line-clamp-2 text-slate-900">
+        <h1 className="text-base sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-snug text-slate-900">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-0.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-1 sm:line-clamp-2 max-w-lg">
+          <p className="mt-0.5 sm:mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg">
             {description}
           </p>
         )}
@@ -161,14 +160,27 @@ export function ClayHeroBanner({
 
       {/* Mascot Graphic: Breakout 3D asset with subtle bounce scale */}
       <div className="relative z-20 shrink-0 w-28 h-28 sm:w-56 sm:h-56 md:w-64 md:h-64 sm:-mr-2 md:-mr-4 -my-4 sm:-my-6 drop-shadow-2xl">
-        <Image
-          src={mascotSrc}
-          alt="Dashboard 3D Mascot"
-          fill
-          sizes="(max-width: 640px) 112px, (max-width: 768px) 224px, 256px"
-          className="object-contain pointer-events-none select-none transition-transform hover:scale-108 duration-300 scale-110 sm:scale-125"
-          priority
-        />
+        {mascotConfigKey ? (
+          <EditableImage
+            configKey={mascotConfigKey}
+            initialValue={mascotSrc}
+            alt="Dashboard 3D Mascot"
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 768px) 224px, 256px"
+            className="object-contain select-none transition-transform hover:scale-108 duration-300 scale-110 sm:scale-125"
+            priority
+            aspectRatio={1}
+          />
+        ) : (
+          <Image
+            src={mascotSrc}
+            alt="Dashboard 3D Mascot"
+            fill
+            sizes="(max-width: 640px) 112px, (max-width: 768px) 224px, 256px"
+            className="object-contain pointer-events-none select-none transition-transform hover:scale-108 duration-300 scale-110 sm:scale-125"
+            priority
+          />
+        )}
       </div>
     </div>
   );

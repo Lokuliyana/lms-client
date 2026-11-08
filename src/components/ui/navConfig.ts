@@ -45,16 +45,16 @@ export const navItems = (user?: UserLike): NavItem[] => [
     label: 'Home',
     icon: HiHome,
     visibleOn: ['mobile', 'desktop'],
-    requireRole: 'teacher',
+    requireRole: ['teacher', 'admin', 'moderator'],
     href: '/admin/dashboard',
   },
-  // 👉 Quick Action (teachers only)
+  // 👉 Quick Action (staff)
   {
     id: 'quick-action',
     label: 'Quick Action',
     icon: HiBolt,
     visibleOn: ['desktop'],
-    requireRole: 'teacher',
+    requireRole: ['teacher', 'admin', 'moderator'],
     children: [
       {
         id: 'qa-create-class',
@@ -179,7 +179,7 @@ export const otherItems = (user?: UserLike): NavItem[] => [
     label: 'User',
     icon: HiUser,
     visibleOn: ['desktop'],
-    requireRole: 'teacher',
+    requireRole: ['teacher', 'admin', 'moderator'],
     href: '/admin/user',
   },
 ];

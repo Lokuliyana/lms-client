@@ -6,6 +6,7 @@ export interface IDeliveryOrder {
   student_id: any;
   class_id?: any;
   store_order_id?: any;
+  study_pack_id?: any;
   month_key?: string;
   delivery_method: string;
   shipping_address: string;
