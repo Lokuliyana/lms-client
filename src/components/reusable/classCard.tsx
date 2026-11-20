@@ -62,25 +62,106 @@ const iconMap: Record<LabelGroup, ReactNode> = {
   student: <HiUserGroup className="text-primary text-sm" />,
 };
 
+const MEETING_TZ = "Asia/Colombo";
+const MEETING_TZ_OFFSET = "+05:30";
+const MEETING_WINDOW_HOURS = 24;
+
+// Statically cached Intl formatters to eliminate synchronous allocations on mobile threads
+const lkrNumberFormatter = new Intl.NumberFormat("en-LK", {
+  style: "decimal",
+  maximumFractionDigits: 0,
+});
+
+const defaultWeekdayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: MEETING_TZ,
+  weekday: "long",
+});
+
+const defaultYearFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: MEETING_TZ,
+  year: "numeric",
+});
+
+const defaultMonthFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: MEETING_TZ,
+  month: "2-digit",
+});
+
+const defaultDayFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: MEETING_TZ,
+  day: "numeric",
+});
+
+const sessionDateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: MEETING_TZ,
+  weekday: "short",
+  month: "short",
+  day: "2-digit",
+});
+
+const sessionTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: MEETING_TZ,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+});
+
+const formatSessionDate = (d: Date) =>
+  sessionDateFormatter
+    .format(d)
+    .replace(/\u202f|\u00a0/g, " ");
+
+const formatSessionTime = (d: Date) =>
+  sessionTimeFormatter
+    .format(d)
+    .replace(/\u202f|\u00a0/g, " ");
+
+const formatSessionRange = (start: Date, end: Date) =>
+  `${formatSessionDate(start)} | ${formatSessionTime(start)} - ${formatSessionTime(end)}`;
+
+const weekdayFormattersCache = new Map<string, Intl.DateTimeFormat>();
+const ymdFormattersCache = new Map<
+  string,
+  { year: Intl.DateTimeFormat; month: Intl.DateTimeFormat; day: Intl.DateTimeFormat }
+>();
+
+function getWeekdayFormatter(tz: string): Intl.DateTimeFormat {
+  if (tz === MEETING_TZ) return defaultWeekdayFormatter;
+  let fmt = weekdayFormattersCache.get(tz);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" });
+    weekdayFormattersCache.set(tz, fmt);
+  }
+  return fmt;
+}
+
+function getYmdFormatters(tz: string) {
+  if (tz === MEETING_TZ) {
+    return { year: defaultYearFormatter, month: defaultMonthFormatter, day: defaultDayFormatter };
+  }
+  let fmts = ymdFormattersCache.get(tz);
+  if (!fmts) {
+    fmts = {
+      year: new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric" }),
+      month: new Intl.DateTimeFormat("en-CA", { timeZone: tz, month: "2-digit" }),
+      day: new Intl.DateTimeFormat("en-CA", { timeZone: tz, day: "numeric" }),
+    };
+    ymdFormattersCache.set(tz, fmts);
+  }
+  return fmts;
+}
+
 // LKR formatting (comma separated; uses “Rs” prefix)
 const formatLKR = (v: string | number) => {
   const num = Number(v);
   if (!isFinite(num)) return String(v);
   try {
-    // en-LK shows "Rs 1,200.00". Trim decimals.
-    const fmt = new Intl.NumberFormat("en-LK", {
-      style: "decimal",
-      maximumFractionDigits: 0,
-    }).format(num);
+    const fmt = lkrNumberFormatter.format(num);
     return fmt.replace(/\u00A0/g, " "); // normalize nbsp
   } catch {
     return num.toLocaleString("en-LK");
   }
 };
-
-const MEETING_TZ = "Asia/Colombo";
-const MEETING_TZ_OFFSET = "+05:30";
-const MEETING_WINDOW_HOURS = 24;
 
 function minutesFromHHMM(hhmm?: string) {
   if (!hhmm) return NaN;
@@ -95,24 +176,15 @@ function isCrossingMidnight(start: string, end: string) {
 }
 
 function weekdayLowerInTZ(d: Date, tz = MEETING_TZ) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" })
-    .format(d)
-    .toLowerCase();
+  return getWeekdayFormatter(tz).format(d).toLowerCase();
 }
 
 function ymdInTZ(d: Date, tz = MEETING_TZ) {
-  const y = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-  }).format(d);
-  const m = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    month: "2-digit",
-  }).format(d);
-  const day = new Intl.DateTimeFormat("en-CA", { timeZone: tz, day: "numeric" })
-    .format(d)
-    .padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  const { year, month, day } = getYmdFormatters(tz);
+  const y = year.format(d);
+  const m = month.format(d);
+  const dd = day.format(d).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
 }
 
 function getUpcomingSessions(
@@ -390,29 +462,6 @@ export const ClassCard: FC<ClassCardProps> = ({
     Boolean(meetingWindow?.isOpen) &&
     isLoggedIn &&
     (canStartMeeting || (isEnrolled && hasAccessThisMonth));
-
-  const formatSessionDate = (d: Date) =>
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: MEETING_TZ,
-      weekday: "short",
-      month: "short",
-      day: "2-digit",
-    })
-      .format(d)
-      .replace(/\u202f|\u00a0/g, " ");
-
-  const formatSessionTime = (d: Date) =>
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: MEETING_TZ,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
-      .format(d)
-      .replace(/\u202f|\u00a0/g, " ");
-
-  const formatSessionRange = (start: Date, end: Date) =>
-    `${formatSessionDate(start)} | ${formatSessionTime(start)} - ${formatSessionTime(end)}`;
 
   const liveSessionRange = useMemo(() => {
     if (!meetingWindow?.startISO || !meetingWindow?.endISO) return null;

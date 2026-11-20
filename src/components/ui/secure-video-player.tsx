@@ -820,7 +820,7 @@ export const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
               onClick={handleTogglePlay}
               onDoubleClick={toggleFullscreen}
               onContextMenu={blockShieldEvent}
-              className="absolute inset-0 z-10 pointer-events-auto cursor-pointer"
+              className="absolute inset-0 z-10 pointer-events-none md:pointer-events-auto cursor-pointer"
               title=""
             />
           )}

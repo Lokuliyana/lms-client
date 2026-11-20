@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import API from '@/lib/axios';
 import { siteConfig as defaultSiteConfig, pagesConfig as defaultPagesConfig } from '../lib/site-config';
 
@@ -29,7 +29,7 @@ export const CustomizationProvider = ({ children }: { children: React.ReactNode 
   const [grades, setGrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchCustomization = async () => {
+  const fetchCustomization = useCallback(async () => {
     try {
       setLoading(true);
       const [settingsRes, taxonomyRes] = await Promise.all([
@@ -58,23 +58,26 @@ export const CustomizationProvider = ({ children }: { children: React.ReactNode 
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCustomization();
-  }, []);
+  }, [fetchCustomization]);
+
+  const contextValue = useMemo(
+    () => ({
+      siteSettings,
+      pagesSettings,
+      subjects,
+      grades,
+      loading,
+      refreshCustomization: fetchCustomization,
+    }),
+    [siteSettings, pagesSettings, subjects, grades, loading, fetchCustomization]
+  );
 
   return (
-    <CustomizationContext.Provider
-      value={{
-        siteSettings,
-        pagesSettings,
-        subjects,
-        grades,
-        loading,
-        refreshCustomization: fetchCustomization,
-      }}
-    >
+    <CustomizationContext.Provider value={contextValue}>
       {children}
     </CustomizationContext.Provider>
   );

@@ -51,9 +51,9 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
       {/* Atmospheric Clay Background Glows - Soft Purple & Blue */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none">
-        <div className="absolute -top-32 right-[5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-purple-200/25 via-indigo-200/15 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute top-[35%] -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/20 via-sky-200/15 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute top-[65%] -right-24 w-[550px] h-[550px] rounded-full bg-gradient-to-tl from-indigo-200/20 via-purple-200/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden md:block absolute -top-32 right-[5%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-purple-200/25 via-indigo-200/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden md:block absolute top-[35%] -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-200/20 via-sky-200/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="hidden md:block absolute top-[65%] -right-24 w-[550px] h-[550px] rounded-full bg-gradient-to-tl from-indigo-200/20 via-purple-200/15 to-transparent blur-3xl pointer-events-none" />
         
         {/* Subtle 3D Watermarks */}
         <div className="absolute -top-12 right-[4%] w-72 h-72 opacity-[0.035] transform rotate-12">

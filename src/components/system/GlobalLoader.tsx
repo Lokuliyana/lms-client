@@ -21,7 +21,7 @@ export default function GlobalLoader() {
 
   useEffect(() => {
     let t: any;
-    if (active > 0) t = setTimeout(() => setVisible(true), 120);
+    if (active > 0) t = setTimeout(() => setVisible(true), 400);
     else setVisible(false);
     return () => t && clearTimeout(t);
   }, [active]);

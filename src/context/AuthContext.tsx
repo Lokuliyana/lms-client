@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { authService } from "@/services/authService";
 import API from "@/lib/axios";
@@ -58,7 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => API.interceptors.response.eject(interceptor);
   }, []);
 
-  const login = async (identifier: string, password: string) => {
+  const openLoginModal = useCallback(() => setIsLoginModalOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
+
+  const login = useCallback(async (identifier: string, password: string) => {
     setLoading(true);
     try {
       const payload: { email?: string; phone?: string; password: string } = { password };
@@ -82,44 +85,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pathname, router]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
     router.push("/");
-  };
+  }, [router]);
 
-  const updateOwnProfile = async (updatedData: any) => {
+  const updateOwnProfile = useCallback(async (updatedData: any) => {
     setLoading(true);
     try {
       await authService.updateOwnProfile(updatedData);
-      setUser({ ...user, ...updatedData });
+      setUser((prev: any) => ({ ...prev, ...updatedData }));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const rawRole = String(user?.role || "").toLowerCase().trim();
   const isTeacher = rawRole === "teacher" || rawRole === "admin";
   const isStudent = Boolean(user && rawRole === "student");
   const isModerator = rawRole === "moderator";
 
-  const hasPermission = (permissionKey: string): boolean => {
+  const hasPermission = useCallback((permissionKey: string): boolean => {
     if (!user) return false;
     if (isTeacher || user.permissions?.includes("*")) {
       return true;
     }
     return Boolean(user.permissions?.includes(permissionKey));
-  };
+  }, [user, isTeacher]);
 
-  return (
-    <AuthContext.Provider value={{
+  const contextValue = useMemo(
+    () => ({
       user,
       loading,
       isLoginModalOpen,
-      openLoginModal: () => setIsLoginModalOpen(true),
-      closeLoginModal: () => setIsLoginModalOpen(false),
+      openLoginModal,
+      closeLoginModal,
       login,
       logout,
       updateOwnProfile,
@@ -128,7 +131,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isStudent,
       isModerator,
       hasPermission,
-    }}>
+    }),
+    [
+      user,
+      loading,
+      isLoginModalOpen,
+      openLoginModal,
+      closeLoginModal,
+      login,
+      logout,
+      updateOwnProfile,
+      isTeacher,
+      isStudent,
+      isModerator,
+      hasPermission,
+    ]
+  );
+
+  return (
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

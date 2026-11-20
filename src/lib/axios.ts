@@ -2,6 +2,12 @@
 import axios, { type AxiosRequestHeaders } from "axios";
 import { startGlobalLoading, stopGlobalLoading } from "@/lib/globalLoading";
 
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipGlobalLoader?: boolean;
+  }
+}
+
 const isBrowser = typeof window !== "undefined";
 
 function resolveBaseURL(): string {
@@ -57,14 +63,14 @@ API.interceptors.request.use(
         }
       }
     }
-    // start global loader for every request
-    if (isBrowser) {
+    // start global loader for requests unless explicitly bypassed
+    if (isBrowser && !config.skipGlobalLoader) {
       startGlobalLoading();
     }
     return config;
   },
   (error) => {
-    if (isBrowser) {
+    if (isBrowser && error?.config && !error.config.skipGlobalLoader) {
       stopGlobalLoading();
     }
     return Promise.reject(error);
@@ -75,13 +81,13 @@ import { openLoginDialog } from "./authState";
 
 API.interceptors.response.use(
   (response) => {
-    if (isBrowser) {
+    if (isBrowser && !response.config?.skipGlobalLoader) {
       stopGlobalLoading();
     }
     return response;
   },
   (error) => {
-    if (isBrowser) {
+    if (isBrowser && error?.config && !error.config.skipGlobalLoader) {
       stopGlobalLoading();
     }
     const status = error.response?.status;

@@ -7,6 +7,7 @@ import React, {
   useRef,
   useCallback,
   useEffect,
+  useMemo,
   ReactNode,
 } from "react";
 import {
@@ -158,8 +159,10 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const contextValue = useMemo(() => ({ confirm }), [confirm]);
+
   return (
-    <ConfirmationContext.Provider value={{ confirm }}>
+    <ConfirmationContext.Provider value={contextValue}>
       {children}
       <ConfirmationModal
         open={isOpen}

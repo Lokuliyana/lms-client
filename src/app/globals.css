@@ -39,18 +39,21 @@
   font-family: 'FM Abhaya';
   src: url('/fonts/FM-Aba-Bold-i63q08.ttf') format('truetype');
   font-weight: bold;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'FM Emanee';
   src: url('/fonts/FM-Emanee-ov9nk3.ttf') format('truetype');
   font-weight: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'FM Rashmee';
   src: url('/fonts/FMRashmee-jdq2pc.ttf') format('truetype');
   font-weight: normal;
+  font-display: swap;
 }
 
 /* Optional Global Font */

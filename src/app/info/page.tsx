@@ -236,14 +236,14 @@ export default function AboutPortfolioPage() {
           className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
         >
           <div
-            className="absolute -top-40 left-1/2 -translate-x-1/2 h-72 w-[120vw] rounded-full blur-3xl opacity-40"
+            className="hidden md:block absolute -top-40 left-1/2 -translate-x-1/2 h-72 w-[120vw] rounded-full blur-3xl opacity-40"
             style={{
               background:
                 "radial-gradient(closest-side, rgba(129,140,248,.18), rgba(217,70,239,.12), rgba(56,189,248,.10), transparent 80%)",
             }}
           />
           <div
-            className="absolute -bottom-40 right-0 h-72 w-[120vw] rounded-full blur-3xl opacity-30"
+            className="hidden md:block absolute -bottom-40 right-0 h-72 w-[120vw] rounded-full blur-3xl opacity-30"
             style={{
               background:
                 "radial-gradient(closest-side, rgba(56,189,248,.10), rgba(217,70,239,.10), rgba(129,140,248,.12), transparent 80%)",

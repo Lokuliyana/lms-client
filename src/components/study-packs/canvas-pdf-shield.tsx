@@ -299,9 +299,15 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
       ("ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0));
 
     const handleBlur = () => {
-      // On mobile / touch devices (iOS Safari), window.blur fires falsely during normal gestures,
-      // URL bar collapsing, and momentum scrolling. On touch devices, rely strictly on document.visibilityState.
-      if (isTouchDevice) {
+      // On mobile / touch devices (iOS Safari, Android Chrome), window.blur fires falsely during
+      // virtual keyboard toggles, address bar collapses/resizes, and momentum scrolling.
+      // On mobile / touch devices, rely strictly on document.visibilityState.
+      if (
+        isTouchDevice ||
+        (typeof document !== "undefined" &&
+          (document.activeElement?.tagName === "INPUT" ||
+            document.activeElement?.tagName === "TEXTAREA"))
+      ) {
         if (typeof document !== "undefined" && document.visibilityState === "hidden") {
           setIsWindowBlurred(true);
         }
