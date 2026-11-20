@@ -30,9 +30,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 export default function AdminStudyPacksPage() {
   const searchParams = useSearchParams();
+  const confirm = useConfirm();
   const editParam = searchParams.get("edit");
   const { user } = useAuth();
   const { subjects, grades } = useTaxonomy();
@@ -257,7 +259,13 @@ export default function AdminStudyPacksPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    const ok = await confirm({
+      title: "Delete Study Pack?",
+      message: `Are you sure you want to delete "${name}"? Students will no longer be able to purchase or view this study pack.`,
+      confirmText: "Delete Pack",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const res = await studyPackService.deleteStudyPack(id);
       if (res.success) {

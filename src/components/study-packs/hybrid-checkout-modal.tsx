@@ -14,6 +14,7 @@ import { Label } from "@/components/dev/label";
 import { studyPackService, IStudyPack } from "@/services/studyPackService";
 import { uploadMedia } from "@/services/mediaService";
 import { useAuth } from "@/hooks/useAuth";
+import { useCustomization } from "@/context/CustomizationContext";
 import {
   Sparkles,
   BookOpen,
@@ -27,6 +28,9 @@ import {
   AlertCircle,
   Video,
   FileCheck2,
+  Landmark,
+  Copy,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -47,7 +51,42 @@ export const HybridCheckoutModal: React.FC<HybridCheckoutModalProps> = ({
   onSuccess,
 }) => {
   const { user } = useAuth();
+  const { siteSettings } = useCustomization();
   const [loading, setLoading] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState(false);
+
+  const banking = siteSettings?.banking || {};
+  const bankName = banking.bankName || banking.bank || "Commercial Bank of Ceylon";
+  const accountNumber = banking.accountNumber || banking.accountNo || "1000293847";
+  const accountName = banking.accountName || banking.accountHolder || "Nexvo Learn (Pvt) Ltd";
+  const branchName = banking.branch || banking.branchName || "Colombo Main Branch";
+  const transferInstructions =
+    banking.instructions ||
+    banking.notes ||
+    "Please include your Student Name or Phone Number as the bank deposit reference note.";
+
+  const handleCopyAccount = async () => {
+    try {
+      if (typeof window !== "undefined" && navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(accountNumber);
+      } else if (typeof document !== "undefined") {
+        const textArea = document.createElement("textarea");
+        textArea.value = accountNumber;
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopiedAccount(true);
+      toast.success("Account number copied to clipboard!");
+      setTimeout(() => setCopiedAccount(false), 2000);
+    } catch {
+      toast.error("Failed to copy account number");
+    }
+  };
 
   // Attachment Proof State
   const [file, setFile] = useState<File | null>(null);
@@ -179,10 +218,11 @@ export const HybridCheckoutModal: React.FC<HybridCheckoutModalProps> = ({
       });
 
       if (res.success) {
+        const isUnlocked = Boolean(isFree || res.data?.digital_access_unlocked);
         toast.success(
-          isFree
-            ? "Free study pack unlocked successfully!"
-            : "Payment proof submitted! Study pack access unlocked."
+          isUnlocked
+            ? (isFree ? "Free study pack unlocked successfully!" : "Payment verified! Study pack access unlocked.")
+            : "Payment proof submitted successfully! Your order is pending verification."
         );
         onSuccess(res.data);
         onClose();
@@ -202,9 +242,9 @@ export const HybridCheckoutModal: React.FC<HybridCheckoutModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !loading && onClose()}>
-      <DialogContent size="md" className="p-0 overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl max-w-lg">
+      <DialogContent size="md" className="p-0 overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl max-w-lg flex flex-col max-h-[92vh] sm:max-h-[85vh]">
         {/* Clean, Non-bloated Modal Header */}
-        <DialogHeader className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 border-b border-indigo-900/40">
+        <DialogHeader className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 border-b border-indigo-900/40 shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="p-1 rounded-lg bg-indigo-500/20 text-indigo-300">
               <Sparkles className="w-3.5 h-3.5" />
@@ -242,7 +282,7 @@ export const HybridCheckoutModal: React.FC<HybridCheckoutModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 min-h-0 p-4 sm:p-6 space-y-4 sm:space-y-5">
           {/* Study Pack Summary & Price As Stated */}
           <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4.5 flex items-center justify-between gap-4">
             <div className="space-y-1">
@@ -273,6 +313,101 @@ export const HybridCheckoutModal: React.FC<HybridCheckoutModalProps> = ({
             <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* Bank Transfer Details Card */}
+          {!isFree && (
+            <div className="bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 dark:from-slate-900/90 dark:via-slate-900 dark:to-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs">
+              <div className="flex items-center justify-between pb-2.5 border-b border-indigo-100/80 dark:border-indigo-900/40">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-xl bg-indigo-600 text-white shadow-xs">
+                    <Landmark className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Bank Transfer Details
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Deposit access fee to the verified academy bank account
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 shrink-0">
+                  Direct Bank
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
+                {/* Bank Name */}
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-xl p-2.5 border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                    Bank
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100 truncate block mt-0.5">
+                    {bankName}
+                  </span>
+                </div>
+
+                {/* Branch */}
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-xl p-2.5 border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                    Branch
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100 truncate block mt-0.5">
+                    {branchName}
+                  </span>
+                </div>
+
+                {/* Account Number with Copy */}
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-xl p-2.5 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                      Account Number
+                    </span>
+                    <span className="font-mono font-bold text-base text-indigo-600 dark:text-indigo-400 tracking-wider block mt-0.5">
+                      {accountNumber}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopyAccount}
+                    className="h-8 px-2.5 rounded-lg text-xs font-semibold gap-1.5 shrink-0 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600"
+                  >
+                    {copiedAccount ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-600">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Account Holder Name */}
+                <div className="bg-white/80 dark:bg-slate-800/80 rounded-xl p-2.5 border border-slate-200/70 dark:border-slate-700/70 sm:col-span-2">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                    Account Holder Name
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100 block mt-0.5">
+                    {accountName}
+                  </span>
+                </div>
+              </div>
+
+              {/* Reference Note Instructions */}
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed flex items-start gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Reference Note:</strong> {transferInstructions}
+                </span>
+              </div>
             </div>
           )}
 

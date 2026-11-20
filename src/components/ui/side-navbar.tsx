@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpen,
   HelpCircle,
@@ -30,8 +31,10 @@ import {
   User as UserIcon,
   X,
   Globe,
+  Search,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { openCommandSearch } from "@/components/ui/command-search";
 import { useEditMode } from "@/context/EditModeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/context/BrandingContext";
@@ -65,10 +68,8 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
   const [academicOpen, setAcademicOpen] = useState(true);
   const [assessmentsOpen, setAssessmentsOpen] = useState(!isStaff);
   const [operationsOpen, setOperationsOpen] = useState(false);
-  const [commerceOpen, setCommerceOpen] = useState(false);
+  const [commerceOpen, setCommerceOpen] = useState(true);
   const [adminOpen, setAdminOpen] = useState(false);
-  const [gradesOpen, setGradesOpen] = useState(false);
-  const [subjectsOpen, setSubjectsOpen] = useState(false);
 
   // Click outside handlers
   useEffect(() => {
@@ -116,69 +117,6 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
 
   const searchParams = useSearchParams();
   const { grades, subjects } = useCustomization();
-  const currentGradeParam = searchParams?.get("grade")?.toLowerCase() || "";
-  const currentSubjectParam = searchParams?.get("subject")?.toLowerCase() || "";
-
-  useEffect(() => {
-    if (pathname === "/classes") {
-      if (currentGradeParam) setGradesOpen(true);
-      if (currentSubjectParam) setSubjectsOpen(true);
-    }
-  }, [pathname, currentGradeParam, currentSubjectParam]);
-
-  const isGradeActive = (val: string) => {
-    if (pathname !== "/classes" || !currentGradeParam) return false;
-    const cleanCurrent = currentGradeParam.replace(/^grade\s*/, "").trim();
-    const cleanItem = val.replace(/^grade\s*/i, "").trim().toLowerCase();
-    return cleanCurrent === cleanItem || currentGradeParam === cleanItem;
-  };
-
-  const isSubjectActive = (val: string) => {
-    if (pathname !== "/classes" || !currentSubjectParam) return false;
-    const low = val.toLowerCase();
-    return (
-      currentSubjectParam === low ||
-      currentSubjectParam.includes(low) ||
-      low.includes(currentSubjectParam)
-    );
-  };
-
-  const gradeNavList = useMemo(() => {
-    const defaultGrades = ["6", "7", "8", "9", "10", "11", "12"];
-    const set = new Set<string>(defaultGrades);
-    grades.forEach((g: any) => {
-      const clean = (g.name || "").replace(/^grade\s*/i, "").trim();
-      if (clean) set.add(clean);
-    });
-    return Array.from(set)
-      .sort(
-        (a, b) =>
-          (parseInt(a.replace(/\D/g, ""), 10) || 0) -
-          (parseInt(b.replace(/\D/g, ""), 10) || 0)
-      )
-      .map((num) => ({
-        label: `Grade ${num}`,
-        value: num,
-        href: `/classes?grade=${num}`,
-      }));
-  }, [grades]);
-
-  const subjectNavList = useMemo(() => {
-    const map = new Map<string, string>();
-    map.set("mathematics", "Mathematics");
-    map.set("science", "Science");
-    subjects.forEach((s: any) => {
-      if (s.name) {
-        map.set(s.name.toLowerCase(), formatSubjectName(s.name));
-      }
-    });
-    return Array.from(map.entries()).map(([val, label]) => ({
-      label,
-      value: val,
-      href: `/classes?subject=${encodeURIComponent(val)}`,
-    }));
-  }, [subjects]);
-
   const isLinkActive = (href: string) => {
     if (href === "/admin/dashboard") {
       return pathname === href;
@@ -198,113 +136,153 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
       return pathname === href;
     }
     if (href === "/classes") {
-      return pathname === "/classes" && !currentGradeParam && !currentSubjectParam;
+      return pathname === "/classes";
     }
     return pathname === href || (href !== "/" && pathname.startsWith(href));
   };
 
-  // 1. Group 1: Academic Hub
+  // 1. Group 1: Academy
   const academicItems = useMemo(() => {
     if (isStaff) {
       return [
         { label: "Classes Directory", icon: BookOpen, href: "/classes" },
+        { label: "Class Applications", icon: UserCheck, href: "/admin/classes/applications" },
+        { label: "Digital Study Packs", icon: Package, href: "/study-packs" },
+        { label: "Study Packs Studio", icon: Sparkles, href: "/admin/study-packs" },
         { label: "Recordings Studio", icon: Video, href: "/admin/recording/add" },
       ];
     }
     if (user) {
       return [
         { label: "My Enrolled Classes", icon: BookOpen, href: "/classes" },
+        { label: "Digital Study Packs", icon: Package, href: "/study-packs" },
         { label: "Live Sessions & Tickets", icon: Video, href: "/dashboard/sessions" },
         { label: "Recordings Library", icon: Layers, href: "/recordings" },
       ];
     }
     return [
       { label: "Browse Classes", icon: BookOpen, href: "/classes" },
+      { label: "Digital Study Packs", icon: Package, href: "/study-packs" },
     ];
   }, [isStaff, user]);
 
-  // 2. Group 2: Assessments & Exams
-  const assessmentItems = useMemo(() => {
-    if (isStaff) {
-      return [
-        { label: "Quizzes Directory", icon: HelpCircle, href: "/quizzes" },
-        { label: "Paper Exams & Grading", icon: Award, href: "/admin/exams" },
-        { label: "Quiz Results Analytics", icon: BarChart3, href: "/admin/quizzes/performances" },
-      ];
-    }
-    if (user) {
-      return [
-        { label: "Available Quizzes", icon: HelpCircle, href: "/quizzes" },
-        { label: "My Performance & Review", icon: BarChart3, href: "/quizzes/performance" },
-        { label: "My Exam Report Cards", icon: Award, href: "/dashboard/grades" },
-      ];
-    }
-    return [
-      { label: "Available Quizzes", icon: HelpCircle, href: "/quizzes" },
-    ];
-  }, [isStaff, user]);
-
-  // 3. Group 3: Operations & Records
+  // 2. Group 2: Operations & Records
   const operationsItems = useMemo(() => {
     if (isStaff) {
       return [
-        { label: "Daily Attendance Roster", icon: CheckSquare, href: "/admin/attendance" },
-        { label: "Physical Dispatch Studio", icon: FolderDown, href: "/admin/deliveries" },
-        { label: "Admissions & Applications", icon: UserCheck, href: "/admin/classes/applications" },
+        { label: "Attendance Roster", icon: CheckSquare, href: "/admin/attendance" },
       ];
     }
     if (user) {
       return [
         { label: "My Attendance Stats", icon: CheckSquare, href: "/dashboard/attendance" },
-        { label: "My Study Pack Orders", icon: FolderDown, href: "/dashboard/deliveries" },
       ];
     }
     return [];
   }, [isStaff, user]);
 
-  // 4. Group 4: Storefront & Commerce
+  // 3. Group 3: Store
   const commerceItems = useMemo(() => {
-    const list = [
-      { label: "Browse Store / Packs", icon: Package, href: "/store" },
-    ];
     if (isStaff) {
-      list.push({ label: "Store Inventory Management", icon: Layers, href: "/admin/store" });
+      return [
+        { label: "Store Orders & Deliveries", icon: FolderDown, href: "/admin/deliveries" },
+        { label: "Store Products & Stock", icon: CheckSquare, href: "/admin/store" },
+      ];
+    }
+    const list = [
+      { label: "Physical Bookstore", icon: Package, href: "/store" },
+    ];
+    if (user) {
+      list.push({ label: "Store Orders & Deliveries", icon: FolderDown, href: "/dashboard/deliveries" });
     }
     return list;
-  }, [isStaff]);
+  }, [isStaff, user]);
 
-  // 5. Group 5: Platform Administration (Staff Only)
+  // 4. Group 4: Exams & Reports
+  const assessmentItems = useMemo(() => {
+    if (isStaff) {
+      return [
+        { label: "Paper Exams & Grading", icon: Award, href: "/admin/exams" },
+      ];
+    }
+    if (user) {
+      return [
+        { label: "Paper Exams & Grading", icon: Award, href: "/dashboard/grades" },
+      ];
+    }
+    return [];
+  }, [isStaff, user]);
+
+  // 5. Group 5: Platform Administration (Staff Only, with Branding & RBAC restricted to Admin)
   const adminItems = useMemo(() => {
     if (!isStaff) return [];
-    return [
+    const items = [
       { label: "User Management", icon: Users, href: "/admin/user" },
-      { label: "Branding & Customization", icon: Sparkles, href: "/admin/settings/branding" },
-      { label: "System Roles & RBAC", icon: Settings, href: "/admin/permissions" },
     ];
-  }, [isStaff]);
+    if (isAdmin) {
+      items.push(
+        { label: "Branding & Customization", icon: Sparkles, href: "/admin/settings/branding" },
+        { label: "System Roles & RBAC", icon: Settings, href: "/admin/permissions" },
+      );
+    }
+    return items;
+  }, [isStaff, isAdmin]);
 
   const quickActions = [
     { label: "Create Class", icon: BookOpen, href: "/admin/classes/add" },
-    { label: "Create Quiz", icon: HelpCircle, href: "/admin/quizzes/add" },
     { label: "Create Recording", icon: Video, href: "/admin/recording/add" },
     { label: "Enroll Students", icon: UserCheck, href: "/admin/classes/applications" },
   ];
 
   return (
-    <aside className="flex flex-col w-full h-full text-sm select-none" style={{ background: '#FAF9F5', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
-      {/* Mobile Drawer Header with Close Button */}
+    <aside className="flex flex-col w-full h-full text-sm select-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ background: '#FAF9F5', borderRight: '1px solid rgba(0,0,0,0.07)' }}>
+      {/* Mobile Drawer Header with Close Button and Search Trigger */}
       {onCloseMobile && (
         <div className="flex items-center justify-between px-4 py-3 sm:hidden shrink-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.07)', background: 'rgba(246,245,240,0.9)' }}>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Navigation Menu</span>
           </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                onCloseMobile();
+                openCommandSearch();
+              }}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-colors"
+              aria-label="Search platform"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Quick Search Bar */}
+      {onCloseMobile && (
+        <div className="px-3.5 pt-3 sm:hidden">
           <button
             type="button"
-            onClick={onCloseMobile}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors"
-            aria-label="Close menu"
+            onClick={() => {
+              onCloseMobile();
+              openCommandSearch();
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs text-slate-500 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:text-slate-800 hover:border-slate-300 transition-all text-left"
           >
-            <X className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <span>Search platform...</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-medium">Find</span>
           </button>
         </div>
       )}
@@ -361,7 +339,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
       )}
 
       {/* Navigation Sections */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* UNIVERSAL TOP SECTION: DASHBOARD & ABOUT PLATFORM */}
         <div className="space-y-1 pb-1">
           <ul className="space-y-0.5">
@@ -463,7 +441,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           </ul>
         </div>
 
-        {/* GROUP 1: ACADEMIC HUB */}
+        {/* GROUP 1: ACADEMY */}
         <div className="space-y-1 pt-1 border-t border-black/5">
           <button
             type="button"
@@ -472,7 +450,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           >
             <div className="flex items-center gap-2">
               <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Academic Hub</span>
+              <span>Academy</span>
             </div>
             <ChevronDown
               className={cn(
@@ -513,160 +491,11 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                 );
               })}
 
-              {/* Taxonomy quick filters (Grades & Subjects) */}
-              <div className="pt-1.5 mt-1 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setGradesOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-2 py-1 rounded text-[10px] font-semibold text-slate-400 hover:text-slate-700 tracking-wider uppercase"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <GraduationCap className="w-3 h-3 text-slate-400" />
-                    <span>Filter by Grade</span>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "w-3 h-3 transition-transform duration-200",
-                      gradesOpen && "rotate-180"
-                    )}
-                  />
-                </button>
-                {gradesOpen && (
-                  <ul className="mt-1 space-y-0.5 pl-2 border-l border-slate-200/70 ml-2">
-                    {gradeNavList.map((g) => {
-                      const active = isGradeActive(g.value);
-                      return (
-                        <li key={g.href}>
-                          <Link
-                            href={g.href}
-                            onClick={() => onCloseMobile?.()}
-                            className={cn(
-                              "flex items-center gap-1.5 px-1.5 py-1 rounded text-xs transition-colors",
-                              active
-                                ? "bg-indigo-50 text-indigo-700 font-semibold"
-                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "w-1 h-1 rounded-full",
-                                active ? "bg-indigo-600" : "bg-slate-300"
-                              )}
-                            />
-                            <span>{g.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setSubjectsOpen((o) => !o)}
-                  className="w-full flex items-center justify-between px-2 py-1 mt-1 rounded text-[10px] font-semibold text-slate-400 hover:text-slate-700 tracking-wider uppercase"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <FlaskConical className="w-3 h-3 text-slate-400" />
-                    <span>Filter by Subject</span>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "w-3 h-3 transition-transform duration-200",
-                      subjectsOpen && "rotate-180"
-                    )}
-                  />
-                </button>
-                {subjectsOpen && (
-                  <ul className="mt-1 space-y-0.5 pl-2 border-l border-slate-200/70 ml-2">
-                    {subjectNavList.map((s) => {
-                      const active = isSubjectActive(s.value);
-                      return (
-                        <li key={s.href}>
-                          <Link
-                            href={s.href}
-                            onClick={() => onCloseMobile?.()}
-                            className={cn(
-                              "flex items-center gap-1.5 px-1.5 py-1 rounded text-xs transition-colors",
-                              active
-                                ? "bg-indigo-50 text-indigo-700 font-semibold"
-                                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "w-1 h-1 rounded-full",
-                                active ? "bg-indigo-600" : "bg-slate-300"
-                              )}
-                            />
-                            <span>{s.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
             </ul>
           )}
         </div>
 
-        {/* GROUP 2: ASSESSMENTS & EXAMS */}
-        {assessmentItems.length > 0 && (
-          <div className="space-y-1 pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setAssessmentsOpen((o) => !o)}
-              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Assessments & Exams</span>
-              </div>
-              <ChevronDown
-                className={cn(
-                  "w-3.5 h-3.5 text-slate-400 transition-transform duration-200",
-                  assessmentsOpen && "rotate-180"
-                )}
-              />
-            </button>
-
-            {assessmentsOpen && (
-              <ul className="space-y-0.5 pl-1">
-                {assessmentItems.map((item) => {
-                  const active = isLinkActive(item.href);
-                  const Icon = item.icon;
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={() => onCloseMobile?.()}
-                        className={cn(
-                          "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
-                          active
-                            ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
-                            : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
-                        )}
-                      >
-                        <Icon
-                          className={cn(
-                            "w-4 h-4 transition-colors",
-                            active
-                              ? "text-indigo-600"
-                              : "text-slate-400 group-hover:text-slate-600"
-                          )}
-                        />
-                        <span className="flex-1 truncate">{item.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* GROUP 3: OPERATIONS & RECORDS */}
+        {/* GROUP 2: OPERATIONS & RECORDS */}
         {operationsItems.length > 0 && (
           <div className="space-y-1 pt-2 border-t border-slate-100">
             <button
@@ -721,7 +550,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           </div>
         )}
 
-        {/* GROUP 4: STOREFRONT & COMMERCE */}
+        {/* GROUP 3: STORE */}
         <div className="space-y-1 pt-2 border-t border-slate-100">
           <button
             type="button"
@@ -730,7 +559,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
           >
             <div className="flex items-center gap-2">
               <Package className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Storefront & Commerce</span>
+              <span>Store</span>
             </div>
             <ChevronDown
               className={cn(
@@ -773,6 +602,61 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
             </ul>
           )}
         </div>
+
+        {/* GROUP 4: EXAMS & REPORTS */}
+        {assessmentItems.length > 0 && (
+          <div className="space-y-1 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setAssessmentsOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-white/60 tracking-wider uppercase transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Award className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Exams & Reports</span>
+              </div>
+              <ChevronDown
+                className={cn(
+                  "w-3.5 h-3.5 text-slate-400 transition-transform duration-200",
+                  assessmentsOpen && "rotate-180"
+                )}
+              />
+            </button>
+
+            {assessmentsOpen && (
+              <ul className="space-y-0.5 pl-1">
+                {assessmentItems.map((item) => {
+                  const active = isLinkActive(item.href);
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => onCloseMobile?.()}
+                        className={cn(
+                          "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group",
+                          active
+                            ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-bold border border-indigo-200/60 shadow-xs [box-shadow:0_2px_8px_rgba(79,70,229,0.08),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-4 h-4 transition-colors",
+                            active
+                              ? "text-indigo-600"
+                              : "text-slate-400 group-hover:text-slate-600"
+                          )}
+                        />
+                        <span className="flex-1 truncate">{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* GROUP 5: PLATFORM ADMINISTRATION (STAFF ONLY) */}
         {isStaff && adminItems.length > 0 && (
@@ -928,9 +812,12 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
             className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:bg-white shadow-xs transition-all text-left"
           >
             {user?.avatarUrl ? (
-              <img
+              <Image
                 src={user.avatarUrl}
                 alt={displayName}
+                width={32}
+                height={32}
+                unoptimized
                 className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 shrink-0"
               />
             ) : (
@@ -986,7 +873,7 @@ export default function Sidebar({ onCloseMobile }: SideNavbarProps) {
                     <Settings className="w-3.5 h-3.5 text-slate-400" />
                     Account Settings
                   </Link>
-                  {isStaff && (
+                  {isAdmin && (
                     <Link
                       href="/admin/settings/branding"
                       onClick={() => {

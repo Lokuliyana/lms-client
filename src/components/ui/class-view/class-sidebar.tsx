@@ -8,6 +8,11 @@ import {
   HiArrowRightOnRectangle,
   HiStar,
   HiCheckCircle,
+  HiVideoCamera,
+  HiPencilSquare,
+  HiChevronDown,
+  HiLockClosed,
+  HiArrowPath,
 } from "react-icons/hi2";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,14 +31,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/dev/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dev/dialog";
+import { Input } from "@/components/dev/input";
+import { Label } from "@/components/dev/label";
 
 import { useAuth } from "@/hooks/useAuth";
-import { createMeetingTicket } from "@/services/classService";
+import { createMeetingTicket, updateClass } from "@/services/classService";
 import { PaymentProofModal } from "./apply-class";
 import ClassAssignments from "./class-assignments";
+import { cn } from "@/lib/utils";
 
 /* ----------------- Types ----------------- */
-type Batch = { batch_name?: string; day: string; start: string; end: string };
+type Batch = { batch_name?: string; day: string; start: string; end: string; days?: string[] };
 type ClassSidebarProps = {
   classData: any;
   onRefetch?: () => void; // ✅ allow parent to refresh data
@@ -202,7 +216,7 @@ function buildWeeklySummary(batches: Batch[]) {
 }
 
 function getUpcomingSessions(batches: Batch[], count = 2) {
-  const out: { startISO: string; endISO: string }[] = [];
+  const out: { startISO: string; endISO: string; batchName?: string }[] = [];
   if (!Array.isArray(batches) || !batches.length) return out;
   const now = new Date();
   for (let offset = 0; offset < 42 && out.length < count; offset++) {
@@ -210,8 +224,9 @@ function getUpcomingSessions(batches: Batch[], count = 2) {
     day.setDate(now.getDate() + offset);
     const wk = weekdayLowerInTZ(day, TZ);
     for (const b of batches) {
-      if (!b?.day || !b?.start || !b?.end) continue;
-      if (wk !== String(b.day).toLowerCase()) continue;
+      if (!b?.start || !b?.end) continue;
+      const bDays = Array.isArray(b.days) && b.days.length > 0 ? b.days : b.day ? [b.day] : [];
+      if (!bDays.some((d) => String(d).toLowerCase() === wk)) continue;
       const startParsed = parseHHMM(b.start);
       const endParsed = parseHHMM(b.end);
       if (!startParsed || !endParsed) continue;
@@ -228,7 +243,10 @@ function getUpcomingSessions(batches: Batch[], count = 2) {
       const endISO = `${endYMD}T${String(endParsed.hour).padStart(2, "0")}:${String(endParsed.minute).padStart(2, "0")}:00+05:30`;
 
       if (isValidDate(new Date(startISO)) && isValidDate(new Date(endISO))) {
-        out.push({ startISO, endISO });
+        // Only collect future or currently active sessions
+        if (new Date(endISO).getTime() > now.getTime()) {
+          out.push({ startISO, endISO, batchName: b.batch_name });
+        }
       }
       if (out.length >= count) break;
     }
@@ -342,14 +360,54 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
   // ✅ optimistic pending months after submit (no refetch needed to show banner)
   const [optimisticPendingMonths, setOptimisticPendingMonths] = useState<string[]>([]);
 
+  const [quickZoomOpen, setQuickZoomOpen] = useState(false);
+  const [sidebarZoomTab, setSidebarZoomTab] = useState<"weekly" | "special">("weekly");
+  const [quickJoinUrl, setQuickJoinUrl] = useState(classData?.zoom_join_url || "");
+  const [quickStartUrl, setQuickStartUrl] = useState(classData?.zoom_start_url || "");
+  const [quickSpecial, setQuickSpecial] = useState({
+    title: classData?.special_session?.title || "",
+    date: classData?.special_session?.date || "",
+    start: classData?.special_session?.start || "",
+    end: classData?.special_session?.end || "",
+    zoom_meeting_id: classData?.special_session?.zoom_meeting_id || "",
+    zoom_join_url: classData?.special_session?.zoom_join_url || "",
+    zoom_start_url: classData?.special_session?.zoom_start_url || "",
+    is_active: Boolean(classData?.special_session?.is_active),
+    description: classData?.special_session?.description || "",
+  });
+  const [quickSaving, setQuickSaving] = useState(false);
+
   const isLoggedIn = Boolean((user as any)?._id || (user as any)?.id);
-  const role = (user as any)?.role || "student";
-  const isTeacher = (role === "teacher" || role === "admin") ;
+  const role = String((user as any)?.role || "student").toLowerCase().trim();
+  const currentUserId = String((user as any)?._id || (user as any)?.id || (user as any)?.userId || "");
+  const isTeacher = role === "teacher" || role === "admin" || role === "moderator";
+  const isTutor = Boolean(
+    currentUserId &&
+    (String(classData?.created_by) === currentUserId ||
+     String(classData?.tutor?._id || classData?.tutor) === currentUserId)
+  );
+  const canStartMeeting = isTeacher || isTutor;
+
+  const hasPurchasedOrAccess = Boolean(
+    canStartMeeting ||
+    classData?.has_access ||
+    classData?.hasAccess ||
+    classData?.is_enrolled ||
+    classData?.isEnrolled ||
+    classData?.isPaid ||
+    classData?.hasAccessThisMonth ||
+    classData?.thisMonthPermission ||
+    (currentUserId && Array.isArray(classData?.enrolledUsers) && classData.enrolledUsers.some((id: any) => String(id) === currentUserId)) ||
+    (currentUserId && Array.isArray(classData?.enrolled_students) && classData.enrolled_students.some((s: any) => String(s?._id || s) === currentUserId)) ||
+    (currentUserId && Array.isArray(classData?.students) && classData.students.some((s: any) => String(s?._id || s) === currentUserId))
+  );
 
   const thisMonthPermission = toBool(
     classData?.thisMonthPermission !== undefined
       ? classData?.thisMonthPermission
-      : classData?.hasAccessThisMonth
+      : classData?.hasAccessThisMonth !== undefined
+      ? classData?.hasAccessThisMonth
+      : hasPurchasedOrAccess
   );
 
   const currentMonth = monthKeyTZ(new Date(), TZ);
@@ -392,54 +450,75 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
     : [];
   const hasAnyAccess = accessibleMonths.length > 0;
 
-  const batches: Batch[] = Array.isArray(classData?.batches)
-    ? classData.batches
-    : [];
+  const batches: Batch[] = useMemo(() => {
+    const raw = Array.isArray(classData?.batches) && classData.batches.length > 0
+      ? classData.batches
+      : Array.isArray(classData?.classTime) && classData.classTime.length > 0
+      ? classData.classTime
+      : [];
+    return raw.flatMap((b: any) => {
+      const start = b.start || b.start_time || b.startTime || "";
+      const end = b.end || b.end_time || b.endTime || "";
+      const batch_name = b.batch_name || b.name || "";
+      if (Array.isArray(b.days) && b.days.length > 0) {
+        return b.days.map((day: string) => ({ day, start, end, batch_name }));
+      }
+      if (b.day && start && end) {
+        return [{ day: b.day, start, end, batch_name }];
+      }
+      return [];
+    });
+  }, [classData?.batches, classData?.classTime]);
+
   const weeklySummary = useMemo(() => buildWeeklySummary(batches), [batches]);
   const upcoming = useMemo(() => getUpcomingSessions(batches, 2), [batches]);
   const nextMeetingSession = useMemo(() => {
     const now = new Date();
-    return upcoming.find((s) => new Date(s.endISO) > now);
+    return upcoming.find((s) => new Date(s.endISO).getTime() > now.getTime()) || null;
   }, [upcoming]);
+
   const meetingWindow = useMemo(() => {
     if (!nextMeetingSession) return null;
     const start = new Date(nextMeetingSession.startISO);
     const end = new Date(nextMeetingSession.endISO);
-    const windowStart = new Date(start.getTime() - 24 * 60 * 60 * 1000);
     const now = new Date();
+    // 30-hour window (or active session in progress) to cover next-day / 24hrs scheduled sessions
+    const windowStartMs = start.getTime() - 30 * 60 * 60 * 1000;
+    const isLiveNow = now.getTime() >= start.getTime() && now.getTime() <= end.getTime();
+    const isOpen = now.getTime() >= windowStartMs && now.getTime() <= end.getTime();
     return {
-      isOpen: now >= windowStart && now <= end,
+      isOpen,
+      isLiveNow,
       startISO: nextMeetingSession.startISO,
       endISO: nextMeetingSession.endISO,
+      batchName: nextMeetingSession.batchName,
     };
   }, [nextMeetingSession]);
 
-  const meetingStamp = useMemo(() => {
-    if (!nextMeetingSession?.startISO) return null;
+  const liveSessionFormattedRange = useMemo(() => {
+    if (!nextMeetingSession?.startISO || !nextMeetingSession?.endISO) return null;
     const start = new Date(nextMeetingSession.startISO);
+    const end = new Date(nextMeetingSession.endISO);
     const date = new Intl.DateTimeFormat("en-US", {
       timeZone: TZ,
+      weekday: "short",
       month: "short",
       day: "2-digit",
-    })
-      .format(start)
-      .toUpperCase();
-    const time = new Intl.DateTimeFormat("en-US", {
-      timeZone: TZ,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    })
-      .format(start)
-      .replace(/\u202f|\u00a0/g, " ")
-      .replace(/\bAM\b/, "A.M")
-      .replace(/\bPM\b/, "P.M");
-    return `${date} - ${time}`;
-  }, [nextMeetingSession?.startISO]);
+    }).format(start);
+    const fmt = (d: Date) =>
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(d).replace(/\u202f|\u00a0/g, " ");
+    return `${date} • ${fmt(start)} – ${fmt(end)}`;
+  }, [nextMeetingSession?.endISO, nextMeetingSession?.startISO]);
+
   const canShowMeetingButton =
     Boolean(meetingWindow?.isOpen) &&
     isLoggedIn &&
-    (isTeacher || thisMonthPermission);
+    (canStartMeeting || hasPurchasedOrAccess);
 
   const feeDisplay = formatFeeLKR(classData?.price ?? classData?.classFee ?? 0);
   const feeNumberOnly = feeDisplay.replace(/^LKR\s*/i, "").trim();
@@ -465,8 +544,8 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
     if (!canShowMeetingButton || meetingLoading) return;
     try {
       setMeetingLoading(true);
-      const mode = isTeacher ? "start" : "join";
-      const { redirect } = await createMeetingTicket(classData?._id, mode);
+      const mode = canStartMeeting ? "start" : "join";
+      const { redirect } = await createMeetingTicket(classData?._id, mode, "regular");
       if (redirect) {
         let finalUrl = redirect;
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -479,9 +558,10 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
               const meetingId = urlObj.pathname.split('/').pop();
               const pwd = urlObj.searchParams.get('pwd');
               const zak = urlObj.searchParams.get('zak');
+              const uname = urlObj.searchParams.get('uname');
               const action = redirect.includes('/s/') ? 'start' : 'join';
               if (meetingId) {
-                finalUrl = `zoomus://zoom.us/${action}?confno=${meetingId}${pwd ? `&pwd=${pwd}` : ''}${zak ? `&zak=${zak}` : ''}`;
+                finalUrl = `zoomus://zoom.us/${action}?confno=${meetingId}${pwd ? `&pwd=${pwd}` : ''}${zak ? `&zak=${zak}` : ''}${uname ? `&uname=${encodeURIComponent(uname)}` : ''}`;
               }
             } catch (e) {
               console.error("Deep link parsing failed", e);
@@ -495,11 +575,47 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
           }
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("[ClassSidebar] Meeting start failed:", err);
-      alert("Meeting is not available yet. Please try again later.");
+      const msg = err?.response?.data?.message || err?.message || "Meeting is not available yet. Please try again later.";
+      alert(msg);
     } finally {
       setMeetingLoading(false);
+    }
+  };
+
+  const onSpecialMeetingClick = async () => {
+    if (meetingLoading) return;
+    try {
+      setMeetingLoading(true);
+      const mode = isTeacher ? "start" : "join";
+      const { redirect } = await createMeetingTicket(classData?._id, mode, "special");
+      if (redirect) {
+        window.open(redirect, "_blank", "noopener,noreferrer");
+      }
+    } catch (err) {
+      console.error("[ClassSidebar] Special meeting start failed:", err);
+      alert("Special meeting is not available yet. Please check again later.");
+    } finally {
+      setMeetingLoading(false);
+    }
+  };
+
+  const handleQuickZoomSave = async () => {
+    try {
+      setQuickSaving(true);
+      await updateClass(classData._id, {
+        zoom_join_url: quickJoinUrl.trim() || undefined,
+        zoom_start_url: quickStartUrl.trim() || undefined,
+        special_session: quickSpecial,
+      });
+      setQuickZoomOpen(false);
+      onRefetch?.();
+    } catch (err) {
+      console.error("Failed to update Zoom settings:", err);
+      alert("Failed to update Zoom settings.");
+    } finally {
+      setQuickSaving(false);
     }
   };
 
@@ -527,25 +643,23 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
           .padStart(2, "0")}`
       );
     return (
-      <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50">
+      <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-50 transition-colors">
         <div className="flex items-center gap-2 min-w-0">
           <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
-              isFirst ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-700"
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              isFirst ? "bg-indigo-600 text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200"
             }`}
           >
             {isFirst ? "Next" : weekdayShortInTZ(startDate, TZ)}
           </span>
-          <span className="text-sm font-medium text-gray-900">
+          <span className="text-xs font-semibold text-slate-800">
             {monthDayInTZ(startDate, TZ)}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200 font-medium text-sm">
-            <HiClock className="w-4 h-4 mr-1" />
-            {fmt(startDate)} –{" "}
-            {crosses ? `${weekdayShortInTZ(endDate, TZ)} ` : ""}
-            {fmt(endDate)}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-indigo-700 font-semibold text-xs shadow-2xs">
+            <HiClock className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+            {fmt(startDate)} – {crosses ? `${weekdayShortInTZ(endDate, TZ)} ` : ""}{fmt(endDate)}
           </span>
         </div>
       </div>
@@ -586,24 +700,203 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
 
   return (
     <div className="space-y-5">
-      {canShowMeetingButton && nextMeetingSession && (
-        <Card className="rounded-xl border border-emerald-200 bg-emerald-50/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
-              <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              Live Session
-            </CardTitle>
+      {/* Special Live Session Card (Highlight) */}
+      {classData?.special_session?.is_active && (
+        <Card className="rounded-xl border border-rose-300 bg-rose-50/70 shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-rose-100/80 to-amber-100/60 border-b border-rose-200/60 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-800">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600"></span>
+                </span>
+                Special Live Session
+              </CardTitle>
+              {classData.special_session.date && (
+                <span className="text-[11px] font-semibold text-rose-700 bg-white/80 px-2 py-0.5 rounded-full border border-rose-200">
+                  {classData.special_session.date}
+                </span>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <Button
-              className="w-full h-11 font-semibold bg-emerald-600 hover:bg-emerald-700 shadow-sm"
-              onClick={onMeetingClick}
-              disabled={meetingLoading}
-            >
-              {meetingStamp || (isTeacher ? "Start Session" : "Join Session")}
-            </Button>
+          <CardContent className="pt-3 space-y-2.5">
+            <h4 className="font-semibold text-slate-800 text-sm">
+              {classData.special_session.title || "Ad-hoc Live Seminar"}
+            </h4>
+            {(classData.special_session.start || classData.special_session.end) && (
+              <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                <HiClock className="w-3.5 h-3.5 text-rose-500" />
+                {classData.special_session.start || ""} - {classData.special_session.end || ""} (Colombo Time)
+              </p>
+            )}
+            {classData.special_session.description && (
+              <p className="text-xs text-slate-600 bg-white/70 p-2 rounded-lg border border-rose-100">
+                {classData.special_session.description}
+              </p>
+            )}
+
+            {(isTeacher || thisMonthPermission) ? (
+              <Button
+                className="w-full h-10 font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-xs text-xs mt-1"
+                onClick={onSpecialMeetingClick}
+                disabled={meetingLoading}
+              >
+                <HiVideoCamera className="w-4 h-4 mr-1.5" />
+                {isTeacher ? "Start Special Session" : "Join Special Session"}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full h-10 font-medium border-rose-200 bg-rose-50/50 text-rose-700 hover:bg-rose-100 text-xs mt-1 rounded-xl gap-1.5"
+                onClick={onEnrollClick}
+              >
+                <HiLockClosed className="w-4 h-4 mr-1.5" />
+                Enroll in Class to Join Live Sessions
+              </Button>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Teacher / Admin Quick Zoom Updater Button */}
+      {isTeacher && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setQuickJoinUrl(classData?.zoom_join_url || "");
+              setQuickStartUrl(classData?.zoom_start_url || "");
+              setQuickSpecial({
+                title: classData?.special_session?.title || "",
+                date: classData?.special_session?.date || "",
+                start: classData?.special_session?.start || "",
+                end: classData?.special_session?.end || "",
+                zoom_meeting_id: classData?.special_session?.zoom_meeting_id || "",
+                zoom_join_url: classData?.special_session?.zoom_join_url || "",
+                zoom_start_url: classData?.special_session?.zoom_start_url || "",
+                is_active: Boolean(classData?.special_session?.is_active),
+                description: classData?.special_session?.description || "",
+              });
+              setQuickZoomOpen(true);
+            }}
+            className="text-xs h-8 border-rose-200 text-rose-700 hover:bg-rose-50 rounded-lg gap-1.5"
+          >
+            <HiPencilSquare className="w-3.5 h-3.5" />
+            Quick Update Zoom & Links
+          </Button>
+        </div>
+      )}
+
+      {/* Regular Live Session Card (Within 24 Hours / Live Now) */}
+      {meetingWindow?.isOpen && nextMeetingSession && (
+        canShowMeetingButton ? (
+          <Card className={`rounded-2xl overflow-hidden shadow-sm transition-all border ${
+            meetingWindow.isLiveNow 
+              ? "border-emerald-400 bg-gradient-to-b from-emerald-50/90 to-white" 
+              : "border-indigo-200 bg-gradient-to-b from-indigo-50/70 to-white"
+          }`}>
+            <CardHeader className="pb-2.5 pt-3.5 px-4 border-b border-slate-100/80">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800">
+                  <span className="relative flex h-2.5 w-2.5">
+                    {meetingWindow.isLiveNow ? (
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+                      </>
+                    ) : (
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-600"></span>
+                    )}
+                  </span>
+                  {meetingWindow.isLiveNow ? "Live Session In Progress" : "Upcoming Live Session"}
+                </CardTitle>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${
+                  meetingWindow.isLiveNow 
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300" 
+                    : "bg-indigo-100 text-indigo-800 border-indigo-200"
+                }`}>
+                  {meetingWindow.isLiveNow ? "Live Now" : "Within 24h"}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-3 pb-4 px-4 space-y-3">
+              {nextMeetingSession.batchName && (
+                <div className="text-xs font-semibold text-slate-800">
+                  {nextMeetingSession.batchName}
+                </div>
+              )}
+              {liveSessionFormattedRange && (
+                <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
+                  <HiClock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span>{liveSessionFormattedRange}</span>
+                </p>
+              )}
+
+              <Button
+                className={`w-full h-11 font-bold text-white shadow-sm rounded-xl flex items-center justify-center gap-2 text-xs transition-all ${
+                  meetingWindow.isLiveNow
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
+                onClick={onMeetingClick}
+                disabled={meetingLoading}
+              >
+                {meetingLoading ? (
+                  <>
+                    <HiArrowPath className="w-4 h-4 animate-spin mr-1" />
+                    Connecting to Zoom...
+                  </>
+                ) : (
+                  <>
+                    <HiVideoCamera className="w-4 h-4 mr-0.5" />
+                    <span>{canStartMeeting ? "Start Live Session" : "Join Live Session"}</span>
+                  </>
+                )}
+              </Button>
+              <p className="text-[10px] text-center text-slate-500">
+                {canStartMeeting 
+                  ? "Tutor / Host Mode: Launching will open the meeting host session."
+                  : "Enrolled Student Access: Launching will connect you to live class."}
+              </p>
+            </CardContent>
+          </Card>
+        ) : !canStartMeeting ? (
+          <Card className="rounded-2xl border border-amber-200/90 bg-gradient-to-b from-amber-50/80 to-white p-4 shadow-sm space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 mt-0.5 border border-amber-200">
+                <HiLockClosed className="w-5 h-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-slate-900">
+                    {meetingWindow.isLiveNow ? "Live Session In Progress" : "Live Session Scheduled"}
+                  </p>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                    {meetingWindow.isLiveNow ? "Live" : "24h"}
+                  </span>
+                </div>
+                {liveSessionFormattedRange && (
+                  <p className="text-[11px] text-slate-600 mt-1 flex items-center gap-1">
+                    <HiClock className="w-3 h-3 text-slate-400" />
+                    {liveSessionFormattedRange}
+                  </p>
+                )}
+                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                  Enroll in this class to receive instant Zoom meeting access and participate in live lectures.
+                </p>
+              </div>
+            </div>
+            <Button
+              className="w-full h-10 text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 rounded-xl shadow-xs gap-1.5"
+              onClick={onEnrollClick}
+            >
+              <HiLockClosed className="w-4 h-4 text-amber-300" />
+              Enroll in Class to Join Live Sessions
+            </Button>
+          </Card>
+        ) : null
       )}
       {/* Pending — ONLY for current month (big card) */}
       {SHOW_PENDING_CARD && (
@@ -723,81 +1016,85 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
           )}
 
           {/* Previous month enroll */}
-          <Card className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-base font-semibold text-violet-900">
-                Enroll for a previous month
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-3 text-sm text-violet-900/90">
-              {!!oldPendingMonths.length && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-violet-900/80">
-                    Pending requests:
-                  </span>
-                  {oldPendingMonths.map((m) => (
-                    <span
-                      key={m}
-                      className="inline-flex items-center rounded-full bg-white text-violet-800 ring-1 ring-inset ring-violet-200 px-2 py-0.5 text-[11px] font-medium"
-                    >
-                      {monthLabel(m)}
-                    </span>
-                  ))}
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                  <HiClock className="w-4 h-4" />
                 </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 justify-between h-10 rounded-lg border border-violet-200 bg-white text-sm"
-                    >
-                      {requestedMonth
-                        ? monthLabel(requestedMonth)
-                        : "Month"}
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="start" className="w-40">
-                    {listPastMonths(6).map((m) => {
-                      const disabled = oldPendingMonths.includes(m.value);
-                      return (
-                        <DropdownMenuItem
-                          key={m.value}
-                          disabled={disabled}
-                          onClick={() => setRequestedMonth(m.value)}
-                        >
-                          {m.label}
-                          {disabled && (
-                            <span className="ml-auto text-xs text-green-600">
-                              ✓ pending
-                            </span>
-                          )}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Button
-                  className="flex-1 h-10 font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs"
-                  onClick={() => {
-                    const target =
-                      requestedMonth || listPastMonths(6)[0]?.value;
-                    if (target) onEnrollForMonth(target);
-                  }}
-                >
-                  Enroll
-                </Button>
+                <h4 className="text-sm font-bold text-slate-900">
+                  Past Month Access
+                </h4>
               </div>
+              <span className="text-[11px] font-medium text-slate-400">Archive</span>
+            </div>
 
-              <p className="text-[11px] text-violet-900/75">
-                You’ll get access to materials for the selected month.
-              </p>
-            </CardContent>
-          </Card>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Need lecture recordings or materials from earlier months? Select a month to request access.
+            </p>
+
+            {!!oldPendingMonths.length && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <span className="text-[11px] font-medium text-slate-500">
+                  Pending:
+                </span>
+                {oldPendingMonths.map((m) => (
+                  <span
+                    key={m}
+                    className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 border border-amber-200/70 px-2.5 py-0.5 text-[11px] font-semibold"
+                  >
+                    {monthLabel(m)}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex-1 justify-between h-9 rounded-xl border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-xs font-semibold text-slate-700"
+                  >
+                    <span>{requestedMonth ? monthLabel(requestedMonth) : "Select Month"}</span>
+                    <HiChevronDown className="w-3.5 h-3.5 ml-1 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="start" className="w-44 rounded-xl shadow-lg">
+                  {listPastMonths(6).map((m) => {
+                    const disabled = oldPendingMonths.includes(m.value);
+                    return (
+                      <DropdownMenuItem
+                        key={m.value}
+                        disabled={disabled}
+                        onClick={() => setRequestedMonth(m.value)}
+                        className="text-xs font-medium cursor-pointer"
+                      >
+                        {m.label}
+                        {disabled && (
+                          <span className="ml-auto text-[10px] font-semibold text-amber-600">
+                            pending
+                          </span>
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                className="h-9 px-4 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs text-xs shrink-0"
+                onClick={() => {
+                  const target =
+                    requestedMonth || listPastMonths(6)[0]?.value;
+                  if (target) onEnrollForMonth(target);
+                }}
+              >
+                Enroll
+              </Button>
+            </div>
+          </div>
         </>
       )}
 
@@ -829,46 +1126,54 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
       />
 
       {/* Schedule */}
-      <Card className="rounded-xl border border-gray-200 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center text-base font-semibold text-gray-900">
-            <HiCalendar className="w-4 h-4 mr-2 text-primary" />
-            Class schedule
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-sm text-gray-800">{weeklySummary}</div>
-
-          <div className="space-y-2">
-            {upcoming.length ? (
-              upcoming.map((s, i) => (
-                <div key={`${s.startISO}-${i}`} className="space-y-1">
-                  <ScheduleRow
-                    isFirst={i === 0}
-                    startISO={s.startISO}
-                    endISO={s.endISO}
-                  />
-                  {USER_TZ !== TZ && (
-                    <p className="text-[11px] text-gray-500 ml-1">
-                      {localRangeLabel(s.startISO, s.endISO)}
-                    </p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-gray-500 italic">
-                No upcoming sessions. New dates coming — you can still enroll.
-              </p>
-            )}
+      <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+              <HiCalendar className="w-4 h-4" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-900">
+              Class Schedule
+            </h4>
           </div>
+        </div>
 
-          <Separator />
-          <p className="text-[11px] text-gray-500">
+        {weeklySummary && (
+          <p className="text-xs font-medium text-slate-600 bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 leading-relaxed">
+            {weeklySummary}
+          </p>
+        )}
+
+        <div className="space-y-2">
+          {upcoming.length ? (
+            upcoming.map((s, i) => (
+              <div key={`${s.startISO}-${i}`} className="space-y-1">
+                <ScheduleRow
+                  isFirst={i === 0}
+                  startISO={s.startISO}
+                  endISO={s.endISO}
+                />
+                {USER_TZ !== TZ && (
+                  <p className="text-[10px] text-slate-400 ml-1">
+                    {localRangeLabel(s.startISO, s.endISO)}
+                  </p>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 italic py-2 text-center">
+              No upcoming sessions. New dates coming — you can still enroll.
+            </p>
+          )}
+        </div>
+
+        <div className="pt-1 border-t border-slate-100">
+          <p className="text-[10px] text-slate-400">
             Times shown in GMT+5:30 ({TZ})
             {USER_TZ !== TZ && ` • Your timezone: ${USER_TZ}`}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Assignments board */}
       {canSeeAssignments ? (
@@ -894,6 +1199,142 @@ export function ClassSidebar({ classData, onRefetch }: ClassSidebarProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Quick Zoom Modal */}
+      <Dialog open={quickZoomOpen} onOpenChange={setQuickZoomOpen}>
+        <DialogContent className="max-w-md bg-white rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <HiVideoCamera className="w-5 h-5 text-rose-500" />
+              Update Zoom & Live Session
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Dedicated Tab Switcher */}
+          <div className="flex border-b border-slate-200 mt-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setSidebarZoomTab("weekly")}
+              className={cn(
+                "flex-1 pb-2.5 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-1.5",
+                sidebarZoomTab === "weekly"
+                  ? "border-rose-600 text-rose-700"
+                  : "border-transparent text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <HiVideoCamera className="w-3.5 h-3.5" />
+              <span>Weekly Zoom Link</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSidebarZoomTab("special")}
+              className={cn(
+                "flex-1 pb-2.5 text-xs font-bold border-b-2 transition-all flex items-center justify-center gap-1.5",
+                sidebarZoomTab === "special"
+                  ? "border-amber-600 text-amber-700"
+                  : "border-transparent text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <HiClock className="w-3.5 h-3.5" />
+              <span>Special Live Session</span>
+              {quickSpecial.is_active && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />}
+            </button>
+          </div>
+
+          {sidebarZoomTab === "weekly" ? (
+            <div className="space-y-4 pt-1 text-xs animate-in fade-in duration-150">
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px]">
+                Update the recurring meeting link used for normal weekly classes.
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Weekly Student Zoom Join URL</Label>
+                <Input
+                  placeholder="https://zoom.us/j/..."
+                  value={quickJoinUrl}
+                  onChange={(e) => setQuickJoinUrl(e.target.value)}
+                  className="mt-1 text-xs"
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">Weekly Host Start URL (Optional)</Label>
+                <Input
+                  placeholder="https://zoom.us/s/..."
+                  value={quickStartUrl}
+                  onChange={(e) => setQuickStartUrl(e.target.value)}
+                  className="mt-1 text-xs"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-1 text-xs animate-in fade-in duration-150">
+              <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-xl border border-amber-200">
+                <div>
+                  <span className="font-semibold text-amber-900 block">Enable Special Session</span>
+                  <span className="text-[10px] text-amber-700">Display highlighted seminar banner to students</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={quickSpecial.is_active}
+                  onChange={(e) => setQuickSpecial(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="h-4 w-4 rounded text-rose-600 focus:ring-rose-500"
+                />
+              </div>
+
+              {quickSpecial.is_active && (
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-700">Special Session Title</Label>
+                    <Input
+                      placeholder="e.g. Extra Paper Discussion"
+                      value={quickSpecial.title}
+                      onChange={(e) => setQuickSpecial(prev => ({ ...prev, title: e.target.value }))}
+                      className="mt-1 text-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs font-semibold text-slate-700">Date</Label>
+                      <Input
+                        type="date"
+                        value={quickSpecial.date}
+                        onChange={(e) => setQuickSpecial(prev => ({ ...prev, date: e.target.value }))}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold text-slate-700">Time</Label>
+                      <Input
+                        placeholder="Start - End"
+                        value={quickSpecial.start}
+                        onChange={(e) => setQuickSpecial(prev => ({ ...prev, start: e.target.value }))}
+                        className="mt-1 text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-700">Special Zoom Join URL</Label>
+                    <Input
+                      placeholder="https://zoom.us/j/..."
+                      value={quickSpecial.zoom_join_url}
+                      onChange={(e) => setQuickSpecial(prev => ({ ...prev, zoom_join_url: e.target.value }))}
+                      className="mt-1 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setQuickZoomOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" className="bg-rose-600 hover:bg-rose-700 text-white" disabled={quickSaving} onClick={handleQuickZoomSave}>
+              {quickSaving ? "Saving..." : "Save Links"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

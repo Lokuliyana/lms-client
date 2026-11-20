@@ -24,11 +24,14 @@ import {
   Search,
   Layers,
   Video,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 export default function AdminStorePage() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
   const [products, setProducts] = useState<IProduct[]>([]);
   const [orders, setOrders] = useState<IStoreOrder[]>([]);
@@ -128,7 +131,13 @@ export default function AdminStorePage() {
   };
 
   const handleArchive = async (id: string) => {
-    if (!confirm("Are you sure you want to deactivate/archive this product?")) return;
+    const ok = await confirm({
+      title: "Archive Product?",
+      message: "Are you sure you want to deactivate and archive this product? It will no longer be visible to students in the store.",
+      confirmText: "Archive Product",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await storeService.deleteProduct(id);
       toast.success("Product archived");
@@ -187,6 +196,16 @@ export default function AdminStorePage() {
                   Store Orders ({orders.length})
                 </button>
               </div>
+
+              <Link href="/store">
+                <Button
+                  variant="outline"
+                  className="rounded-xl text-xs flex items-center gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm"
+                >
+                  <Eye className="w-4 h-4 text-slate-500" />
+                  See Store
+                </Button>
+              </Link>
 
               {activeTab === "products" && (
                 <Button

@@ -35,7 +35,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 
 import { getClasses } from "@/services/classService";
-import { getAllQuizzesForPlay } from "@/services/quizService";
 import { formatGradeName, formatSubjectName } from "@/lib/formatters";
 import { useCustomization } from "@/context/CustomizationContext";
 import { getSubjectPastelTheme } from "@/constants/clayAssets";
@@ -51,7 +50,7 @@ interface CommandSearchProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type SearchCategory = "all" | "classes" | "quizzes" | "pages" | "actions";
+type SearchCategory = "all" | "classes" | "pages" | "actions";
 
 function getSubjectIcon(subjectStr?: string) {
   const s = (subjectStr || "").toLowerCase();
@@ -101,24 +100,19 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
   const { grades, subjects } = useCustomization();
 
   const [classList, setClassList] = useState<any[]>([]);
-  const [quizList, setQuizList] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [activeCategory, setActiveCategory] = useState<SearchCategory>("all");
 
-  // Fetch classes and quizzes when command search opens
+  // Fetch classes when command search opens
   useEffect(() => {
     if (!open) return;
     let isMounted = true;
     const loadSearchData = async () => {
       try {
         setLoadingData(true);
-        const [cData, qData] = await Promise.all([
-          getClasses().catch(() => []),
-          getAllQuizzesForPlay().catch(() => []),
-        ]);
+        const cData = await getClasses().catch(() => []);
         if (isMounted) {
           setClassList(Array.isArray(cData) ? cData : []);
-          setQuizList(Array.isArray(qData) ? qData : []);
         }
       } catch (err) {
         console.error("Failed to load command search data", err);
@@ -132,7 +126,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
     };
   }, [open]);
 
-  // Listen for Cmd+K / Ctrl+K
+  // Listen for Cmd+K / Ctrl+K and open-command-search event
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -140,8 +134,14 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
         onOpenChange(!open);
       }
     };
+    const handleCustomOpen = () => onOpenChange(true);
+
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    window.addEventListener("open-command-search", handleCustomOpen);
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener("open-command-search", handleCustomOpen);
+    };
   }, [open, onOpenChange]);
 
   const handleSelect = (href: string) => {
@@ -149,91 +149,54 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
     router.push(href);
   };
 
+  const isAdmin = String(user?.role || "").toLowerCase().trim() === "admin";
   const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator" || Boolean(isTeacher);
   const showClasses = activeCategory === "all" || activeCategory === "classes";
-  const showQuizzes = activeCategory === "all" || activeCategory === "quizzes";
   const showPages = activeCategory === "all" || activeCategory === "pages";
   const showActions = (activeCategory === "all" || activeCategory === "actions") && isStaff && !isStudent;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Search classes, subjects, quizzes, navigation..." />
+      <CommandInput placeholder="Search classes, subjects, navigation..." />
 
       {/* Category Filter Chips Bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-indigo-100/50 bg-[#FAF9F5]/70 overflow-x-auto no-scrollbar">
-        <button
-          type="button"
-          onClick={() => setActiveCategory("all")}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
-            activeCategory === "all"
-              ? "bg-indigo-600 text-white shadow-2xs"
-              : "text-slate-600 hover:text-slate-900 hover:bg-white"
-          )}
-        >
-          All
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveCategory("classes")}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
-            activeCategory === "classes"
-              ? "bg-indigo-600 text-white shadow-2xs"
-              : "text-slate-600 hover:text-slate-900 hover:bg-white"
-          )}
-        >
-          Classes ({classList.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveCategory("quizzes")}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
-            activeCategory === "quizzes"
-              ? "bg-indigo-600 text-white shadow-2xs"
-              : "text-slate-600 hover:text-slate-900 hover:bg-white"
-          )}
-        >
-          Quizzes ({quizList.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveCategory("pages")}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
-            activeCategory === "pages"
-              ? "bg-indigo-600 text-white shadow-2xs"
-              : "text-slate-600 hover:text-slate-900 hover:bg-white"
-          )}
-        >
-          Navigation
-        </button>
-        {isStaff && !isStudent && (
-          <button
-            type="button"
-            onClick={() => setActiveCategory("actions")}
-            className={cn(
-              "px-3 py-1 rounded-full text-xs font-semibold transition-all shrink-0",
-              activeCategory === "actions"
-                ? "bg-indigo-600 text-white shadow-2xs"
-                : "text-slate-600 hover:text-slate-900 hover:bg-white"
-            )}
-          >
-            Staff Actions
-          </button>
-        )}
+      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-slate-100 bg-slate-50/60 overflow-x-auto no-scrollbar">
+        {(
+          [
+            { id: "all", label: "All" },
+            { id: "classes", label: `Classes (${classList.length})` },
+            { id: "pages", label: "Navigation" },
+            ...(isStaff && !isStudent ? [{ id: "actions", label: "Staff Actions" }] : []),
+          ] as const
+        ).map((tab) => {
+          const isActive = activeCategory === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveCategory(tab.id as SearchCategory)}
+              className={cn(
+                "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors shrink-0",
+                isActive
+                  ? "bg-white text-slate-800 shadow-2xs border border-slate-200/80"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/60"
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      <CommandList className="max-h-[420px]">
+      <CommandList className="max-h-[380px]">
         <CommandEmpty>
           <div className="py-10 flex flex-col items-center justify-center text-center px-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border-2 border-indigo-200/80 flex items-center justify-center text-indigo-500 shadow-md mb-3">
-              <Sparkles className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+              <Sparkles className="w-5 h-5" />
             </div>
-            <p className="text-sm font-bold text-slate-800">No matching results found</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs">
-              Try searching by subject name (e.g. Science, Maths), grade (e.g. Grade 10), topic, or navigation pages.
+            <p className="text-xs font-semibold text-slate-700">No matching results found</p>
+            <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+              Try searching by subject name, grade, topic, or page.
             </p>
           </div>
         </CommandEmpty>
@@ -260,24 +223,23 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                   key={`class-${classId || Math.random()}`}
                   value={`${titleStr} ${subj} ${gr} ${teacherName} class course`}
                   onSelect={() => handleSelect(classId ? `/classes/${classId}` : `/classes`)}
-                  className="flex items-center justify-between cursor-pointer py-2.5 px-3 rounded-2xl group transition-all"
+                  className="flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl group transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs",
-                        pastel.capsuleBg,
-                        pastel.capsuleBorder
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                        pastel.capsuleBg
                       )}
                     >
                       <IconComp className={cn("w-4 h-4", pastel.capsuleText)} />
                     </div>
                     <div className="min-w-0 flex flex-col">
-                      <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                      <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900 transition-colors truncate">
                         {titleStr}
                       </span>
-                      <span className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                        {gr && <span className="font-semibold text-indigo-700">{gr}</span>}
+                      <span className="text-[11px] text-slate-400 truncate flex items-center gap-1.5">
+                        {gr && <span className="font-medium text-slate-600">{gr}</span>}
                         {gr && subj && <span>•</span>}
                         {subj && <span>{subj}</span>}
                         {teacherName && (
@@ -292,60 +254,16 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
 
                   <div className="flex items-center gap-2.5 shrink-0 ml-3">
                     {cls.monthly_fee && (
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-medium text-slate-600 font-mono">
                         Rs. {formatLKR(cls.monthly_fee)}
                       </span>
                     )}
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500 transition-colors" />
                   </div>
                 </CommandItem>
               );
             })}
           </CommandGroup>
-        )}
-
-        {/* Dynamic Quiz Results */}
-        {showQuizzes && quizList.length > 0 && (
-          <>
-            {showClasses && classList.length > 0 && <CommandSeparator />}
-            <CommandGroup heading="Quizzes & Assessment Arena">
-              {quizList.slice(0, 8).map((qz) => {
-                const qId = String(qz._id || qz.id || "");
-                const titleStr = qz.title || "Untitled Quiz";
-                const qCount = qz.questions?.length || qz.question_count || 0;
-                const difficulty = (qz.difficulty || "medium").toLowerCase();
-
-                return (
-                  <CommandItem
-                    key={`quiz-${qId || Math.random()}`}
-                    value={`${titleStr} ${qz.subject || ""} quiz assessment exam`}
-                    onSelect={() => handleSelect(qId ? `/quizzes/${qId}` : `/quizzes`)}
-                    className="flex items-center justify-between cursor-pointer py-2.5 px-3 rounded-2xl group transition-all"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 shadow-2xs shrink-0">
-                        <Trophy className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex flex-col">
-                        <span className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors truncate">
-                          {titleStr}
-                        </span>
-                        <span className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
-                          <span>{qCount} {qCount === 1 ? "Question" : "Questions"}</span>
-                          {qz.subject && <span>• {qz.subject}</span>}
-                          {difficulty && <span className="font-semibold capitalize text-amber-700">• {difficulty}</span>}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 shrink-0 ml-3">
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-600 transition-colors" />
-                    </div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </>
         )}
 
         {/* Navigation Section */}
@@ -356,76 +274,46 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
               <CommandItem
                 value="dashboard home student portal overview"
                 onSelect={() => handleSelect(isStaff ? "/admin/dashboard" : "/dashboard")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/70 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <Home className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-indigo-600">Dashboard</span>
-                  <span className="text-[10px] text-slate-400">Personal learning hub & schedule</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Dashboard</span>
+                  <span className="text-[11px] text-slate-400">Personal learning hub & schedule</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
 
               <CommandItem
                 value="classes courses catalog schedule live sessions"
                 onSelect={() => handleSelect("/classes")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/70 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <BookOpen className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-emerald-600">Classes & Course Catalog</span>
-                  <span className="text-[10px] text-slate-400">Browse Grade 06 - A/L theory & revision</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Classes & Course Catalog</span>
+                  <span className="text-[11px] text-slate-400">Browse Grade 06 - A/L theory & revision</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-600" />
-              </CommandItem>
-
-              <CommandItem
-                value="quizzes assessment arena practice test exam"
-                onSelect={() => handleSelect("/quizzes")}
-                className="group py-2.5 px-3 rounded-2xl"
-              >
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/70 flex items-center justify-center text-amber-600 shrink-0 shadow-2xs mr-1">
-                  <HelpCircle className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-amber-600">Quizzes & Assessment Arena</span>
-                  <span className="text-[10px] text-slate-400">Interactive timed challenges & practice</span>
-                </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-amber-600" />
-              </CommandItem>
-
-              <CommandItem
-                value="performance analytics grades marks leaderboard"
-                onSelect={() => handleSelect("/quizzes/performance")}
-                className="group py-2.5 px-3 rounded-2xl"
-              >
-                <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200/70 flex items-center justify-center text-purple-600 shrink-0 shadow-2xs mr-1">
-                  <BarChart3 className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-purple-600">Performance & Analytics</span>
-                  <span className="text-[10px] text-slate-400">Score progress & rank breakdowns</span>
-                </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-purple-600" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
 
               <CommandItem
                 value="store study packs workbooks materials"
                 onSelect={() => handleSelect("/store")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200/70 flex items-center justify-center text-rose-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <Layers className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-rose-600">Store & Study Packs</span>
-                  <span className="text-[10px] text-slate-400">Printed workbooks and physical kits</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Store & Study Packs</span>
+                  <span className="text-[11px] text-slate-400">Printed workbooks and physical kits</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-rose-600" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
             </CommandGroup>
           </>
@@ -436,109 +324,102 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
           <>
             <CommandSeparator />
             <CommandGroup heading="Staff & Administration Studio">
-              <CommandItem
-                value="branding settings customization engine theme"
-                onSelect={() => handleSelect("/admin/settings/branding")}
-                className="group py-2.5 px-3 rounded-2xl bg-indigo-50/50 hover:bg-indigo-50/90"
-              >
-                <div className="w-8 h-8 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 shrink-0 shadow-2xs mr-1">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-indigo-900">Customization & Branding Engine</span>
-                  <span className="text-[10px] text-indigo-600/80">Configure platform identity, logos, hero</span>
-                </div>
-                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-200/80 text-indigo-800">
-                  Admin
-                </span>
-              </CommandItem>
+              {isAdmin && (
+                <CommandItem
+                  value="branding settings customization engine theme"
+                  onSelect={() => handleSelect("/admin/settings/branding")}
+                  className="group py-2 px-3 rounded-xl"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Customization & Branding Engine</span>
+                    <span className="text-[11px] text-slate-400">Configure platform identity, logos, hero</span>
+                  </div>
+                  <span className="ml-auto px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600">
+                    Admin
+                  </span>
+                </CommandItem>
+              )}
 
               <CommandItem
                 value="students applications roster enrollments"
                 onSelect={() => handleSelect("/admin/classes/applications")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <Users className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-slate-900">Student Applications & Roster</span>
-                  <span className="text-[10px] text-slate-400">Review pending admissions & students</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Student Applications & Roster</span>
+                  <span className="text-[11px] text-slate-400">Review pending admissions & students</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-slate-700" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
 
               <CommandItem
                 value="create class new class add course"
                 onSelect={() => handleSelect("/admin/classes/add")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <PlusCircle className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-blue-600">Create New Class</span>
-                  <span className="text-[10px] text-slate-400">Set schedule, grade, fee, and meetings</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Create New Class</span>
+                  <span className="text-[11px] text-slate-400">Set schedule, grade, fee, and meetings</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600" />
-              </CommandItem>
-
-              <CommandItem
-                value="create quiz new quiz assessment question"
-                onSelect={() => handleSelect("/admin/quizzes/add")}
-                className="group py-2.5 px-3 rounded-2xl"
-              >
-                <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shrink-0 shadow-2xs mr-1">
-                  <PlusCircle className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-purple-600">Create New Quiz</span>
-                  <span className="text-[10px] text-slate-400">Build timed MCQs, blanks, and answers</span>
-                </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-purple-600" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
 
               <CommandItem
                 value="create recording lesson replay video"
                 onSelect={() => handleSelect("/admin/recording/add")}
-                className="group py-2.5 px-3 rounded-2xl"
+                className="group py-2 px-3 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-2xs mr-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 mr-1">
                   <Video className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-bold text-slate-800 group-hover:text-rose-600">Upload Lesson Recording</span>
-                  <span className="text-[10px] text-slate-400">Publish HD lesson replays for students</span>
+                  <span className="text-xs font-semibold text-slate-800 group-data-[selected=true]:text-slate-900">Upload Lesson Recording</span>
+                  <span className="text-[11px] text-slate-400">Publish HD lesson replays for students</span>
                 </div>
-                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-hover:text-rose-600" />
+                <ArrowRight className="ml-auto w-3.5 h-3.5 text-slate-300 group-data-[selected=true]:text-slate-500" />
               </CommandItem>
             </CommandGroup>
           </>
         )}
       </CommandList>
 
-      {/* Tactile Keyboard Navigation Footer */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-t border-indigo-100/70 bg-[#FAF9F5]/90 text-[11px] text-slate-500 rounded-b-3xl">
+      {/* Clean Keyboard Navigation Footer */}
+      <div className="flex items-center justify-between px-4 py-2 border-t border-slate-100 bg-slate-50/60 text-[11px] text-slate-500 rounded-b-2xl">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-medium">
-            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono shadow-2xs text-[10px] text-slate-700">↵</kbd>
-            <span>open</span>
+          <span className="flex items-center gap-1 font-medium text-slate-500">
+            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 font-mono shadow-2xs text-[10px] text-slate-600">↵</kbd>
+            <span>Open</span>
           </span>
-          <span className="flex items-center gap-1 font-medium">
-            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono shadow-2xs text-[10px] text-slate-700">↑↓</kbd>
-            <span>navigate</span>
+          <span className="flex items-center gap-1 font-medium text-slate-500">
+            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 font-mono shadow-2xs text-[10px] text-slate-600">↑↓</kbd>
+            <span>Navigate</span>
           </span>
-          <span className="flex items-center gap-1 font-medium">
-            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 font-mono shadow-2xs text-[10px] text-slate-700">esc</kbd>
-            <span>close</span>
+          <span className="flex items-center gap-1 font-medium text-slate-500">
+            <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200/80 font-mono shadow-2xs text-[10px] text-slate-600">esc</kbd>
+            <span>Close</span>
           </span>
         </div>
-        <span className="text-indigo-600 font-bold hidden sm:inline">
-          Nexvo Fast Search ✨
+        <span className="text-slate-400 font-medium hidden sm:inline text-[11px]">
+          Command Menu
         </span>
       </div>
     </CommandDialog>
   );
+}
+
+export function openCommandSearch() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("open-command-search"));
+  }
 }
 
 export function CommandSearchTrigger({ onClick }: { onClick: () => void }) {
@@ -546,20 +427,13 @@ export function CommandSearchTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="hidden md:flex items-center gap-2 px-3.5 py-1.5 text-xs text-slate-500 rounded-full transition-all duration-200 w-56 lg:w-72 justify-between hover:text-slate-800 hover:border-indigo-200 hover:shadow-xs group active:scale-[0.98]"
-      style={{
-        background: "#FFFFFF",
-        border: "1.5px solid rgba(99, 102, 241, 0.15)",
-        boxShadow: "0 2px 8px rgba(99, 102, 241, 0.05), inset 0 1px 1px rgba(255,255,255,0.9)",
-      }}
+      className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 rounded-xl transition-all duration-150 w-56 lg:w-64 justify-between bg-white/90 hover:bg-white border border-slate-200/80 hover:border-slate-300 shadow-2xs hover:text-slate-700 active:scale-[0.99]"
     >
       <div className="flex items-center gap-2">
-        <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-          <Search className="w-3 h-3" />
-        </div>
-        <span className="text-slate-400 group-hover:text-slate-600 transition-colors">Search platform...</span>
+        <Search className="w-3.5 h-3.5 text-slate-400" />
+        <span className="text-slate-400">Search platform...</span>
       </div>
-      <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-[#FAF9F5] border border-indigo-100 rounded-md shadow-2xs group-hover:border-indigo-200">
+      <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-slate-50 border border-slate-200 rounded shadow-2xs">
         ⌘K
       </kbd>
     </button>

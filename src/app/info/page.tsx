@@ -165,13 +165,15 @@ function SectionHeading({
 
 function HeroHeading({ pagesConfig }: { pagesConfig: any }) {
   const { heading, subHeading, label } = pagesConfig.about.hero;
-  
-  const namePart = pagesConfig.about.teacher.name;
-  const prefix = heading.replace(namePart, "").trim();
 
   return (
     <header aria-label="Introduction" className="space-y-3">
-      <p className="text-xs tracking-[0.2em] text-slate-500 uppercase">{label}</p>
+      <EditableContent
+        configKey="pages.about.hero.label"
+        initialValue={label}
+        as="p"
+        className="text-xs tracking-[0.2em] text-slate-500 uppercase"
+      />
 
       <div className="text-[44px] md:text-[52px] leading-[1.05] font-extrabold tracking-tight text-slate-900">
         <EditableContent
@@ -214,7 +216,7 @@ export default function AboutPortfolioPage() {
       name: "NexvoLearn",
       url: "https://www.nexvolearn.com",
     },
-    sameAs: person.socials.map((s: any) => s.url),
+    sameAs: Array.isArray(person?.socials) ? person.socials.map((s: any) => s.url) : [],
   };
 
   return (
@@ -328,8 +330,14 @@ export default function AboutPortfolioPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 mt-4">
-                    {person.pills.map((pill: any, i: number) => (
-                      <Pill key={i}>{pill}</Pill>
+                    {(Array.isArray(person?.pills) ? person.pills : []).map((pill: any, i: number) => (
+                      <Pill key={i}>
+                        <EditableContent
+                          configKey={`pages.about.teacher.pills.${i}`}
+                          initialValue={pill}
+                          as="span"
+                        />
+                      </Pill>
                     ))}
                   </div>
                 </div>
@@ -344,7 +352,7 @@ export default function AboutPortfolioPage() {
                       initialValue={hero.introduction}
                     />
                   </div>
-                  {hero.bio.map((paragraph: any, i: number) => (
+                  {(Array.isArray(hero?.bio) ? hero.bio : []).map((paragraph: any, i: number) => (
                     <div
                       key={i}
                       className="text-[15px] md:text-[17px] text-slate-700 leading-relaxed max-w-xl"
@@ -357,7 +365,7 @@ export default function AboutPortfolioPage() {
                   ))}
 
                   <div className="flex flex-wrap items-center gap-3">
-                    {hero.actions.map((action: any, i: number) => (
+                    {(Array.isArray(hero?.actions) ? hero.actions : []).map((action: any, i: number) => (
                       <Button
                         key={i}
                         variant={action.primary ? "default" : "outline"}
@@ -383,7 +391,7 @@ export default function AboutPortfolioPage() {
                       className="ml-auto flex items-center gap-2"
                       aria-label="Social links"
                     >
-                      {person.socials.map((social: any, i: number) => (
+                      {(Array.isArray(person?.socials) ? person.socials : []).map((social: any, i: number) => (
                         <a
                           key={i}
                           href={social.url}
@@ -460,7 +468,7 @@ export default function AboutPortfolioPage() {
                   />
 
                   <div className="space-y-0.5">
-                    {education.timeline.map((item: any, i: number) => (
+                    {(Array.isArray(education?.timeline) ? education.timeline : []).map((item: any, i: number, arr: any[]) => (
                       <TimelineItem
                         key={i}
                         title={
@@ -475,8 +483,14 @@ export default function AboutPortfolioPage() {
                             initialValue={item.subtitle}
                           />
                         }
-                        right={item.right}
-                        last={i === education.timeline.length - 1}
+                        right={
+                          <EditableContent
+                            configKey={`pages.about.education.timeline.${i}.right`}
+                            initialValue={item.right}
+                            as="span"
+                          />
+                        }
+                        last={i === arr.length - 1}
                       />
                     ))}
                   </div>
@@ -529,7 +543,7 @@ export default function AboutPortfolioPage() {
                   />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {features.cards.map((card: any, i: number) => (
+                    {(Array.isArray(features?.cards) ? features.cards : []).map((card: any, i: number) => (
                       <div
                         key={i}
                         className="rounded-2xl border bg-slate-50/40 p-5 h-full flex flex-col transition-colors hover:bg-slate-50"
@@ -541,8 +555,14 @@ export default function AboutPortfolioPage() {
                           />
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          {card.items.map((item: any, j: number) => (
-                            <Pill key={j}>{item}</Pill>
+                          {(Array.isArray(card?.items) ? card.items : []).map((item: any, j: number) => (
+                            <Pill key={j}>
+                              <EditableContent
+                                configKey={`pages.about.features.cards.${i}.items.${j}`}
+                                initialValue={item}
+                                as="span"
+                              />
+                            </Pill>
                           ))}
                         </div>
                       </div>
@@ -582,7 +602,7 @@ export default function AboutPortfolioPage() {
                   />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {stats.items.map((stat: any, i: number) => (
+                    {(Array.isArray(stats?.items) ? stats.items : []).map((stat: any, i: number) => (
                       <StatCard
                         key={i}
                         icon={stat.icon}

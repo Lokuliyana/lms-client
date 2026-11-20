@@ -16,6 +16,7 @@ import { createMeetingTicket, deleteClass as deleteClassApi } from "@/services/c
 import { getSignedUrl } from "@/services/mediaService";
 import { formatGradeName, formatSubjectName } from "@/lib/formatters";
 import { getSubjectPastelTheme, getSubjectThumbnail } from "@/constants/clayAssets";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 /** Label groups unchanged */
 type LabelGroup = "grade" | "subject" | "student";
@@ -202,6 +203,7 @@ export const ClassCard: FC<ClassCardProps> = ({
 
   const { user, loading } = useAuth();
   const router = useRouter();
+  const confirm = useConfirm();
   const isTeacher = (user?.role === "teacher" || user?.role === "admin");
   const isAdmin = user?.role === "admin";
   const canStartMeeting = isTeacher || isAdmin;
@@ -297,7 +299,12 @@ export const ClassCard: FC<ClassCardProps> = ({
   // ---------- DELETE ----------
   const handleDelete = async () => {
     if (!isTeacher || deleting) return;
-    const ok = window.confirm("Are you sure you want to delete this class?");
+    const ok = await confirm({
+      title: "Delete Class?",
+      message: `Are you sure you want to delete "${title || "this class"}"? All associated materials and records will be affected.`,
+      confirmText: "Delete Class",
+      variant: "destructive",
+    });
     if (!ok) return;
     try {
       setDeleting(true);

@@ -423,33 +423,35 @@ function StudentDashboardContent() {
           )}
         </CardSection>
 
-        {/* Quizzes */}
-        <CardSection
-          title={
-            <EditableContent
-              configKey="pages.dashboard.sections.quizzes.title"
-              initialValue={activeDashboard?.sections?.quizzes?.title || pagesConfig.dashboard.sections.quizzes.title}
-            />
-          }
-          description={
-            <EditableContent
-              configKey="pages.dashboard.sections.quizzes.description"
-              initialValue={activeDashboard?.sections?.quizzes?.description || pagesConfig.dashboard.sections.quizzes.description}
-            />
-          }
-          icon={pagesConfig.dashboard.sections.quizzes.icon}
-          onViewAll={() => router.push("/quizzes")}
-        >
-          {loading ? (
-            <SectionLoader />
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {quizzes.slice(0, 3).map((quiz: any) => (
-                <QuizCard key={quiz._id} quiz={quiz} />
-              ))}
-            </div>
-          )}
-        </CardSection>
+        {/* Quizzes (Only visible for logged-in students, completely hidden on guest view) */}
+        {!isGuest && (
+          <CardSection
+            title={
+              <EditableContent
+                configKey="pages.dashboard.sections.quizzes.title"
+                initialValue={activeDashboard?.sections?.quizzes?.title || pagesConfig.dashboard.sections.quizzes.title}
+              />
+            }
+            description={
+              <EditableContent
+                configKey="pages.dashboard.sections.quizzes.description"
+                initialValue={activeDashboard?.sections?.quizzes?.description || pagesConfig.dashboard.sections.quizzes.description}
+              />
+            }
+            icon={pagesConfig.dashboard.sections.quizzes.icon}
+            onViewAll={() => router.push("/quizzes")}
+          >
+            {loading ? (
+              <SectionLoader />
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {quizzes.slice(0, 3).map((quiz: any) => (
+                  <QuizCard key={quiz._id} quiz={quiz} />
+                ))}
+              </div>
+            )}
+          </CardSection>
+        )}
 
         {/* WhatsApp bubble */}
         {/* WhatsApp bubble */}

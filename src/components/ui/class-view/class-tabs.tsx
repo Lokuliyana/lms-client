@@ -24,6 +24,7 @@ import { Input } from "@/components/dev/input";
 import { Button } from "@/components/dev/button";
 import { toast } from "sonner";
 import { ManualEnrollModal } from "./ManualEnrollModal";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 type ClassTabsProps = {
   classData: any;
@@ -73,6 +74,7 @@ function getCurrentColomboMonthKey(): string {
 }
 
 export function ClassTabs({ classData }: ClassTabsProps) {
+  const confirm = useConfirm();
   const { user } = useAuth();
   const storedUser = typeof window !== "undefined" ? authService.getStoredUser() : null;
   const activeUser = user || storedUser;
@@ -255,7 +257,13 @@ export function ClassTabs({ classData }: ClassTabsProps) {
   }, [classId, selectedMonth, classData, isPrivileged]);
 
   const handleRevokeAccess = async (studentId: string, studentName: string) => {
-    if (!confirm(`Are you sure you want to revert access for ${studentName}?`)) return;
+    const ok = await confirm({
+      title: "Revert Access?",
+      message: `Are you sure you want to revert access for ${studentName}?`,
+      confirmText: "Revert Access",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await revokeStudentAccess(classId, studentId, selectedMonth);
       toast.success(`Access reverted for ${studentName}`);

@@ -44,6 +44,36 @@ export type NavItem = {
   configKey?: string;
 };
 
+export function normalizeArray<T>(defaultArray: T[] = [], override: any): T[] {
+  if (!override) return defaultArray;
+  if (Array.isArray(override)) return override;
+  if (typeof override === "object" && override !== null) {
+    const keys = Object.keys(override);
+    const hasNumericKeys = keys.some((k) => !isNaN(Number(k)));
+    if (hasNumericKeys) {
+      const maxIndex = Math.max(
+        (defaultArray?.length || 0) - 1,
+        ...keys.map((k) => Number(k)).filter((n) => !isNaN(n))
+      );
+      const merged: T[] = [];
+      for (let i = 0; i <= maxIndex; i++) {
+        const def = defaultArray?.[i] || ({} as T);
+        const itemOverride = override[i] ?? override[String(i)];
+        if (itemOverride !== undefined || defaultArray?.[i] !== undefined) {
+          merged.push(
+            itemOverride && typeof itemOverride === "object" && !Array.isArray(itemOverride)
+              ? { ...def, ...itemOverride }
+              : itemOverride ?? def
+          );
+        }
+      }
+      return merged;
+    }
+    return Object.values(override);
+  }
+  return defaultArray;
+}
+
 export const getSiteConfig = (settings: any) => ({
   metadata: settings?.site?.metadata || content.site.metadata,
   layout: settings?.site?.layout || content.site.layout,
@@ -240,24 +270,25 @@ export const getPagesConfig = (settings: any) => ({
     hero: {
       ...content.pages.about.hero,
       ...settings?.pages?.about?.hero,
-      actions: [
-        {
-          label: "Watch on YouTube",
-          icon: Play,
-          href: "https://youtube.com/@mr.mathsscience?si=Cu79QMaZlRZx6bX3",
-          primary: true,
-        },
-        {
-          label: "Join a class",
-          icon: CalendarCheck2,
-          href: "/classes",
-          primary: false,
-        },
-      ],
+      bio: normalizeArray(
+        content.pages.about.hero.bio,
+        settings?.pages?.about?.hero?.bio
+      ),
+      actions: normalizeArray(
+        content.pages.about.hero.actions,
+        settings?.pages?.about?.hero?.actions
+      ).map((action: any, idx: number) => ({
+        ...action,
+        icon: idx === 0 ? Play : CalendarCheck2,
+      })),
     },
     teacher: {
       ...content.pages.about.teacher,
       ...settings?.pages?.about?.teacher,
+      pills: normalizeArray(
+        content.pages.about.teacher.pills,
+        settings?.pages?.about?.teacher?.pills
+      ),
       socials: [
         {
           name: "YouTube",
@@ -277,42 +308,54 @@ export const getPagesConfig = (settings: any) => ({
       ],
     },
     results: {
-      ...(settings?.pages?.about?.results || content.pages.about.results),
+      ...content.pages.about.results,
+      ...settings?.pages?.about?.results,
       icon: Award,
     },
     quote: {
-      ...(settings?.pages?.about?.quote || content.pages.about.quote),
+      ...content.pages.about.quote,
+      ...settings?.pages?.about?.quote,
       icon: Quote,
     },
     education: {
-      ...(settings?.pages?.about?.education || content.pages.about.education),
+      ...content.pages.about.education,
+      ...settings?.pages?.about?.education,
+      timeline: normalizeArray(
+        content.pages.about.education.timeline,
+        settings?.pages?.about?.education?.timeline
+      ),
       icon: BookOpen,
     },
     features: {
-      ...(settings?.pages?.about?.features || content.pages.about.features),
+      ...content.pages.about.features,
+      ...settings?.pages?.about?.features,
+      cards: normalizeArray(
+        content.pages.about.features.cards,
+        settings?.pages?.about?.features?.cards
+      ).map((card: any, idx: number) => {
+        const defaultCard = content.pages.about.features.cards[idx];
+        const defaultItems = defaultCard?.items || [];
+        return {
+          ...card,
+          items: normalizeArray(defaultItems, card?.items),
+        };
+      }),
       icon: FlagIcon,
     },
     stats: {
-      ...(settings?.pages?.about?.stats || content.pages.about.stats),
+      ...content.pages.about.stats,
+      ...settings?.pages?.about?.stats,
       icon: Award,
-      items: [
-        {
-          icon: BookOpen,
-          ...((settings?.pages?.about?.stats?.items || content.pages.about.stats.items)[0] || {}),
-        },
-        {
-          icon: Users,
-          ...((settings?.pages?.about?.stats?.items || content.pages.about.stats.items)[1] || {}),
-        },
-        {
-          icon: BookOpen,
-          ...((settings?.pages?.about?.stats?.items || content.pages.about.stats.items)[2] || {}),
-        },
-        {
-          icon: Star,
-          ...((settings?.pages?.about?.stats?.items || content.pages.about.stats.items)[3] || {}),
-        },
-      ],
+      items: normalizeArray(
+        content.pages.about.stats.items,
+        settings?.pages?.about?.stats?.items
+      ).map((item: any, idx: number) => {
+        const defaultIcons = [BookOpen, Users, BookOpen, Star];
+        return {
+          icon: defaultIcons[idx] || Award,
+          ...item,
+        };
+      }),
     },
   },
   dashboard: {

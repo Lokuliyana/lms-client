@@ -19,12 +19,14 @@ import {
   ShieldAlert,
   GraduationCap,
   Globe,
+  Search,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { CommandSearch, CommandSearchTrigger } from "@/components/ui/command-search";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/context/BrandingContext";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface TopbarProps {
   onToggleMobileSidebar?: () => void;
@@ -38,7 +40,8 @@ export function Topbar({
   const router = useRouter();
   const { user, isTeacher, isStudent, hasPermission, logout } = useAuth();
   const { branding } = useBranding();
-  const canManageBranding = !isStudent && hasPermission("branding.manage");
+  const isAdmin = String(user?.role || "").toLowerCase().trim() === "admin";
+  const canManageBranding = isAdmin;
   const isStaff = user?.role === "teacher" || user?.role === "admin" || user?.role === "moderator" || Boolean(isTeacher);
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -103,13 +106,16 @@ export function Topbar({
           <BrandLogo size="md" showText={false} />
         </div>
 
-        {/* Center: Client's Branding / Platform Logo */}
-        <div suppressHydrationWarning className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 pointer-events-auto">
+        {/* Center: Client's Branding / Platform Logo (Hidden on narrow mobile to avoid collision with action buttons) */}
+        <div suppressHydrationWarning className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center justify-center gap-2 pointer-events-auto">
           {branding.assets?.logoUrl ? (
-            <img
+            <Image
               suppressHydrationWarning
               src={branding.assets.logoUrl}
               alt={branding.platformName || "Client Logo"}
+              width={140}
+              height={32}
+              unoptimized
               className="h-7 sm:h-8 w-auto object-contain max-h-9"
             />
           ) : (
@@ -123,8 +129,19 @@ export function Topbar({
         </div>
 
         {/* Right Side: Search Trigger (Right-aligned) + User Profile Chip */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Cmd+K Quick Search Trigger right-aligned */}
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          {/* Mobile Search Trigger Icon (< md) */}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
+            className="md:hidden p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-white/70 transition-colors"
+            aria-label="Search platform"
+            title="Search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* Cmd+K Quick Search Trigger right-aligned (>= md) */}
           <CommandSearchTrigger onClick={() => setSearchOpen(true)} />
 
           {/* User Profile Chip & Dropdown */}
@@ -136,9 +153,12 @@ export function Topbar({
                 className="flex items-center gap-2 p-1 pl-1.5 rounded-xl hover:bg-white/70 border border-transparent hover:border-black/5 transition-all text-left"
               >
                 {user.avatarUrl ? (
-                  <img
+                  <Image
                     src={user.avatarUrl}
                     alt={displayName}
+                    width={28}
+                    height={28}
+                    unoptimized
                     className="w-7 h-7 rounded-lg object-cover ring-1 ring-slate-200"
                   />
                 ) : (
@@ -161,19 +181,19 @@ export function Topbar({
                 />
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="rounded-full px-3.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white/70"
+                  className="rounded-full px-2 sm:px-3.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white/70 h-8"
                 >
                   <Link href="/login">Log in</Link>
                 </Button>
                 <Button
                   size="sm"
                   asChild
-                  className="rounded-full px-4 text-xs font-semibold bg-primary text-primary-foreground shadow-sm hover:opacity-95 active:scale-[0.98] transition-all"
+                  className="rounded-full px-2.5 sm:px-4 text-xs font-semibold bg-primary text-primary-foreground shadow-sm hover:opacity-95 active:scale-[0.98] transition-all h-8"
                   style={{
                     boxShadow: '0 4px 14px rgba(79,70,229,0.25), inset 0 1px 1px rgba(255,255,255,0.4)',
                   }}

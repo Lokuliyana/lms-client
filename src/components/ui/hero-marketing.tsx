@@ -426,7 +426,7 @@ export default function HeroMarketing({ isGuest, displayName }: Props) {
                     className="text-xs font-bold text-slate-900 truncate mt-0.5"
                     as="p"
                   />
-                  <p className="text-[11px] text-indigo-800 font-semibold mt-0.5 flex items-center gap-1">
+                  <div className="text-[11px] text-indigo-800 font-semibold mt-0.5 flex items-center gap-1">
                     <Clock className="w-3 h-3 text-indigo-500" />
                     <EditableContent
                       configKey="pages.dashboard.guestHero.sessionWidget.time"
@@ -436,7 +436,7 @@ export default function HeroMarketing({ isGuest, displayName }: Props) {
                       }
                       as="span"
                     />
-                  </p>
+                  </div>
                 </div>
                 <Link
                   href="/classes"

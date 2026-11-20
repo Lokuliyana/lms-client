@@ -36,6 +36,7 @@ import { CalculatingLoader } from "@/components/reusable/calculating-loader";
 import { DetailLoader } from "@/components/reusable/detail-loader";
 import { MathRenderer } from "@/components/ui/math-renderer";
 import QuizReview from "@/app/quizzes/review/quizReview";
+import { ConfirmationModal } from "@/components/ui/confirmation-dialog";
 
 export default function AssessmentFocusArena() {
   const params = useParams();
@@ -1201,24 +1202,20 @@ export default function AssessmentFocusArena() {
       )}
 
       {/* Finish & Submit Confirmation Dialog */}
-      {showSubmitModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
-                <Send className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Finish and Submit Assessment?
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  You are about to submit your responses for evaluation.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs space-y-2">
+      <ConfirmationModal
+        open={showSubmitModal}
+        onOpenChange={setShowSubmitModal}
+        title="Finish and Submit Assessment?"
+        variant="primary"
+        icon={<Send className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />}
+        confirmText="Confirm & Submit"
+        cancelText="Return to Questions"
+        message={
+          <div className="space-y-3 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              You are about to submit your responses for evaluation.
+            </p>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 text-xs space-y-2">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Total Questions:</span>
                 <span className="font-bold text-slate-900 dark:text-white">{questions.length}</span>
@@ -1234,64 +1231,25 @@ export default function AssessmentFocusArena() {
                 </span>
               </div>
             </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSubmitModal(false)}
-                className="text-xs h-9 px-4"
-              >
-                Return to Questions
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleFinalSubmit}
-                className="text-xs h-9 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
-              >
-                Confirm & Submit
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+        }
+        onConfirm={handleFinalSubmit}
+        onCancel={() => setShowSubmitModal(false)}
+      />
 
       {/* Exit Confirmation Dialog */}
-      {showExitModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 border border-amber-100 dark:border-amber-800">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Exit Assessment?</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Your current progress may be lost.</p>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowExitModal(false)}
-                className="text-xs h-9"
-              >
-                Resume Assessment
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => router.push("/quizzes")}
-                className="text-xs h-9"
-              >
-                Confirm Exit
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        open={showExitModal}
+        onOpenChange={setShowExitModal}
+        title="Exit Assessment?"
+        message="Your current progress may be lost. Are you sure you want to exit to the quizzes dashboard?"
+        confirmText="Confirm Exit"
+        cancelText="Resume Assessment"
+        variant="warning"
+        icon="warning"
+        onConfirm={() => router.push("/quizzes")}
+        onCancel={() => setShowExitModal(false)}
+      />
     </div>
   );
 }

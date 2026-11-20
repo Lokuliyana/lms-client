@@ -9,6 +9,7 @@ import { EditModeProvider } from "@/context/EditModeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { BrandingProvider } from "@/context/BrandingContext";
 import { CustomizationProvider } from "@/context/CustomizationContext";
+import { ConfirmationProvider } from "@/context/ConfirmationContext";
 
 import { siteConfig } from "@/lib/site-config";
 
@@ -86,7 +87,9 @@ export default function RootLayout({
             <BrandingProvider>
               <CustomizationProvider>
                 <EditModeProvider>
-                  <LayoutWrapper>{children}</LayoutWrapper>
+                  <ConfirmationProvider>
+                    <LayoutWrapper>{children}</LayoutWrapper>
+                  </ConfirmationProvider>
                 </EditModeProvider>
               </CustomizationProvider>
             </BrandingProvider>

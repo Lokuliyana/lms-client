@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/dev/dropdown-menu";
 import { Separator } from "@/components/dev/separator";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -407,6 +408,8 @@ export default function ClassAssignments({
     | string
     | undefined;
 
+  const confirm = useConfirm();
+
   const [items, setItems] = useState<AssignmentItem[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -572,8 +575,15 @@ export default function ClassAssignments({
                           Mark past due (demo)
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-rose-600 focus:text-rose-700"
+                          className="text-rose-600 focus:text-rose-700 cursor-pointer"
                           onClick={async () => {
+                            const ok = await confirm({
+                              title: "Delete Assignment?",
+                              message: `Are you sure you want to delete "${a.title}"? Students will permanently lose access and any submissions will be removed.`,
+                              confirmText: "Delete Assignment",
+                              variant: "destructive",
+                            });
+                            if (!ok) return;
                             await deleteAssignment(a._id);
                             load(page);
                           }}

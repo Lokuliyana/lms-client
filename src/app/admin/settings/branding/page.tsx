@@ -8,6 +8,7 @@ import API from '@/lib/axios';
 import { useBranding } from '@/context/BrandingContext';
 import { useCustomization } from '@/context/CustomizationContext';
 import AccessGate from '@/components/auth/AccessGate';
+import { useConfirm } from '@/components/ui/confirmation-dialog';
 import { SectionHeader } from '@/components/reusable/section-header';
 import { CardSection } from '@/components/reusable/card-section';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ const PRESET_PALETTES = [
 ];
 
 export default function BrandingSettingsPage() {
+  const confirm = useConfirm();
   const { branding, updateBranding, loading, refreshBranding } = useBranding();
   const {
     siteSettings,
@@ -216,7 +218,16 @@ export default function BrandingSettingsPage() {
     }
   };
 
-  const handleDeleteSubject = async (id: string) => {
+  const handleDeleteSubject = async (id: string, name?: string) => {
+    const ok = await confirm({
+      title: "Delete Subject?",
+      message: name
+        ? `Are you sure you want to delete subject "${name}"? It will no longer appear in subject selection for classes.`
+        : "Are you sure you want to delete this subject?",
+      confirmText: "Delete Subject",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await API.delete(`/customization/subjects/${id}`);
       refreshCustomization();
@@ -236,7 +247,16 @@ export default function BrandingSettingsPage() {
     }
   };
 
-  const handleDeleteGrade = async (id: string) => {
+  const handleDeleteGrade = async (id: string, name?: string) => {
+    const ok = await confirm({
+      title: "Delete Grade Level?",
+      message: name
+        ? `Are you sure you want to delete grade level "${name}"? It will no longer appear in grade selection for classes.`
+        : "Are you sure you want to delete this grade level?",
+      confirmText: "Delete Grade",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await API.delete(`/customization/grades/${id}`);
       refreshCustomization();
@@ -814,7 +834,7 @@ export default function BrandingSettingsPage() {
                       <span className="capitalize">{sub.name}</span>
                       <button
                         type="button"
-                        onClick={() => handleDeleteSubject(sub._id)}
+                        onClick={() => handleDeleteSubject(sub._id, sub.name)}
                         className="text-slate-400 hover:text-rose-600 transition-colors p-1"
                         title="Delete Subject"
                       >
@@ -853,7 +873,7 @@ export default function BrandingSettingsPage() {
                       <span>{gr.name}</span>
                       <button
                         type="button"
-                        onClick={() => handleDeleteGrade(gr._id)}
+                        onClick={() => handleDeleteGrade(gr._id, gr.name)}
                         className="text-slate-400 hover:text-rose-600 transition-colors p-1"
                         title="Delete Grade"
                       >

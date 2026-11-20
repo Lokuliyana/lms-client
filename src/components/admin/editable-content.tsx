@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 import { useEditMode } from "@/context/EditModeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomization } from "@/context/CustomizationContext";
@@ -9,6 +10,22 @@ import { Button } from "@/components/dev/button";
 import { Check, X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+
+function sanitizeHtmlSafe(html: string): string {
+  if (!html || typeof html !== "string") return "";
+  if (typeof window !== "undefined" && typeof DOMPurify?.sanitize === "function") {
+    return DOMPurify.sanitize(html, {
+      ADD_ATTR: ["class", "style", "target", "rel", "data-list"],
+      ADD_TAGS: ["iframe"],
+    });
+  }
+  // Server-side SSR fallback: strip dangerous scripts and event handlers
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "")
+    .replace(/on\w+\s*=\s*[^>\s]+/gi, "")
+    .replace(/javascript:/gi, "");
+}
 
 interface EditableContentProps {
   configKey: string;
@@ -82,11 +99,17 @@ export default function EditableContent({
         ? contentEditableRef.current.textContent || ""
         : tempValue;
 
+      const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/admin/content", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           key: configKey,
           value: finalValue,
@@ -126,7 +149,7 @@ export default function EditableContent({
       return (
         <Component
           className={className}
-          dangerouslySetInnerHTML={{ __html: value }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtmlSafe(value) }}
         />
       );
     }
@@ -136,8 +159,9 @@ export default function EditableContent({
   if (isEditing) {
     if (!hasHtml) {
       // INLINE PLAIN TEXT EDITING (inherits all styles perfectly)
+      const ContainerTag = Component === "span" ? "span" : "div";
       return (
-        <div className="relative group z-50 inline-block w-full">
+        <ContainerTag className="relative group z-50 inline-block w-full">
           <Component className={className}>
             <span
               ref={contentEditableRef as any}
@@ -151,7 +175,7 @@ export default function EditableContent({
             </span>
           </Component>
           
-          <div className="absolute top-full left-0 mt-2 flex gap-1.5 p-1 bg-white/95 backdrop-blur-lg border border-slate-200/60 rounded-xl shadow-lg z-50">
+          <span className="absolute top-full left-0 mt-2 flex gap-1.5 p-1 bg-white/95 backdrop-blur-lg border border-slate-200/60 rounded-xl shadow-lg z-50">
             <Button
               size="sm"
               variant="ghost"
@@ -172,8 +196,8 @@ export default function EditableContent({
                 <Check className="w-3.5 h-3.5" />
               )}
             </Button>
-          </div>
-        </div>
+          </span>
+        </ContainerTag>
       );
     }
 
@@ -226,20 +250,20 @@ export default function EditableContent({
     >
       {/* Render content safely */}
       {/<[a-z][\s\S]*>/i.test(value) ? (
-        <Component dangerouslySetInnerHTML={{ __html: value }} />
+        <Component dangerouslySetInnerHTML={{ __html: sanitizeHtmlSafe(value) }} />
       ) : (
         <Component>{value}</Component>
       )}
       
       {/* Subtle Hover indicator - only visible on hover */}
-      <div className="absolute inset-0 -m-1.5 rounded-xl border border-transparent group-hover/edit:border-indigo-200/50 group-hover/edit:bg-indigo-50/30 pointer-events-none transition-all duration-300" />
+      <span className="absolute inset-0 -m-1.5 rounded-xl border border-transparent group-hover/edit:border-indigo-200/50 group-hover/edit:bg-indigo-50/30 pointer-events-none transition-all duration-300 block" />
       
       {/* Edit icon/badge on hover */}
-      <div className="absolute -top-2.5 -right-2.5 opacity-0 group-hover/edit:opacity-100 transition-all duration-300 transform scale-90 group-hover/edit:scale-100 z-10 pointer-events-none">
+      <span className="absolute -top-2.5 -right-2.5 opacity-0 group-hover/edit:opacity-100 transition-all duration-300 transform scale-90 group-hover/edit:scale-100 z-10 pointer-events-none block">
         <span className="bg-white/95 backdrop-blur-sm text-indigo-500 border border-indigo-100 p-1.5 rounded-full shadow-sm flex items-center justify-center">
            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
         </span>
-      </div>
+      </span>
     </MotionWrapper>
   );
 }

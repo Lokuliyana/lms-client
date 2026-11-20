@@ -265,7 +265,7 @@ export function SectionHeader({
     <div
       className={cn(
         "relative overflow-visible rounded-3xl border px-4 sm:px-6 py-3.5 sm:py-4 min-h-[82px] sm:min-h-[96px] flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 transition-all duration-300 mt-2 sm:mt-4",
-        illustration ? "pr-28 sm:pr-40 md:pr-48" : "",
+        illustration ? "pr-16 sm:pr-32 md:pr-44" : "",
         theme.container,
         className
       )}
@@ -365,14 +365,14 @@ export function SectionHeader({
         </div>
       )}
 
-      {/* Contextual 3D Clay Illustration — pops out above the capsule for 3D depth */}
+      {/* Contextual 3D Clay Illustration — responsively scaled to preserve tactile aesthetic on mobile while avoiding collisions with action buttons */}
       {illustration && (
-        <div className="absolute right-0 sm:right-2 md:right-3 top-0 -translate-y-[20%] sm:-translate-y-[22%] w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-end pointer-events-none select-none z-20 drop-shadow-xl">
+        <div className="absolute right-1 sm:right-2 md:right-3 top-0 -translate-y-[15%] sm:-translate-y-[20%] md:-translate-y-[22%] w-16 h-16 sm:w-28 sm:h-28 md:w-40 md:h-40 flex items-center justify-end pointer-events-none select-none z-10 drop-shadow-lg sm:drop-shadow-xl opacity-90 sm:opacity-100 transition-all">
           <Image
             src={illustration}
             alt=""
             fill
-            sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 176px"
+            sizes="(max-width: 640px) 64px, (max-width: 768px) 112px, 160px"
             className="object-contain pointer-events-none select-none"
             priority
           />

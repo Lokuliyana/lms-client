@@ -4,6 +4,29 @@ import path from "path";
 
 export async function POST(req: Request) {
   try {
+    // 1. Extract Bearer token from Authorization header or cookie
+    let token = "";
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.toLowerCase().startsWith("bearer ")) {
+      token = authHeader.substring(7).trim();
+    }
+    if (!token) {
+      const cookieHeader = req.headers.get("cookie");
+      if (cookieHeader) {
+        const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+        if (match) {
+          token = match[1].trim();
+        }
+      }
+    }
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "Unauthorized: Missing authentication token" },
+        { status: 401 }
+      );
+    }
+
     const { key, value } = await req.json();
 
     if (!key || value === undefined) {
@@ -11,6 +34,51 @@ export async function POST(req: Request) {
         { error: "Key and value are required" },
         { status: 400 }
       );
+    }
+
+    // 2. Block prototype pollution (case-insensitive check)
+    const lowerKey = typeof key === "string" ? key.toLowerCase() : "";
+    const forbiddenKeys = ["__proto__", "prototype", "constructor"];
+    const keys = typeof key === "string" ? key.split(".") : [];
+    if (
+      typeof key !== "string" ||
+      forbiddenKeys.some((k) => lowerKey.includes(k)) ||
+      keys.some((k) => forbiddenKeys.includes(k.toLowerCase().trim()))
+    ) {
+      return NextResponse.json(
+        { error: "Invalid key: prototype pollution detected" },
+        { status: 400 }
+      );
+    }
+
+    // 3. Sync to backend Express API with forwarded JWT Bearer token
+    const origin =
+      process.env.API_ORIGIN ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      "http://localhost:4002/api";
+    const backendBase = origin.replace(/\/api\/?$/, "");
+
+    try {
+      const backendRes = await fetch(`${backendBase}/api/admin/content`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Cookie: `token=${token}`,
+        },
+        body: JSON.stringify({ key, value }),
+      });
+
+      if (!backendRes.ok) {
+        const errData = await backendRes.json().catch(() => ({}));
+        return NextResponse.json(
+          { error: errData.error || errData.message || "Backend rejected content update" },
+          { status: backendRes.status }
+        );
+      }
+    } catch {
+      // Non-blocking fallback if backend is offline during local compilation
     }
 
     const contentPath = path.join(process.cwd(), "src", "lib", "content-v2.json");
@@ -23,7 +91,6 @@ export async function POST(req: Request) {
       const content = JSON.parse(fileContent);
 
       // Helper to set nested value by key path (e.g., "person.hero.heading")
-      const keys = key.split(".");
       let current = content;
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) {
@@ -34,19 +101,6 @@ export async function POST(req: Request) {
       current[keys[keys.length - 1]] = value;
 
       fs.writeFileSync(targetFile, JSON.stringify(content, null, 2));
-
-      // Also sync to backend Express API so MongoDB SiteSettings matches
-      try {
-        const origin = process.env.API_ORIGIN || "http://localhost:4002/api";
-        const backendBase = origin.replace(/\/api\/?$/, "");
-        await fetch(`${backendBase}/api/admin/content`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, value }),
-        });
-      } catch {
-        // Non-blocking fallback if backend is offline during local compilation
-      }
 
       return NextResponse.json({ success: true, content });
     }

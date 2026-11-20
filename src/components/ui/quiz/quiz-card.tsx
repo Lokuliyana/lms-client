@@ -25,15 +25,7 @@ import {
   Trophy,
 } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/dev/alert-dialog";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 import GameQuizPopup, { type Quiz as PopupQuiz } from "./QuizPopup";
 import type { QuizMetadata } from "@/types/quiz";
@@ -134,8 +126,8 @@ export default function QuizCard({ quiz }: QuizCardProps) {
     Boolean(isTeacher) ||
     Boolean(hasPermission?.("quizzes.manage"));
 
+  const confirm = useConfirm();
   const [fresh, setFresh] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -225,17 +217,19 @@ export default function QuizCard({ quiz }: QuizCardProps) {
       />
     );
 
-  const handleDeleteClick = () => {
-    if (!canManage) return;
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
+  const handleDeleteClick = async () => {
     if (!canManage || !quizId) return;
+    const ok = await confirm({
+      title: "Delete this quiz?",
+      message: `This will hide "${quiz.title || "the quiz"}" from students and mark it as deleted. You can't undo this from the student side. Are you sure you want to continue?`,
+      confirmText: "Delete Quiz",
+      variant: "destructive",
+    });
+    if (!ok) return;
+
     try {
       setDeleting(true);
       await updateQuiz(quizId, { is_delete: true, is_active: false });
-      setDeleteDialogOpen(false);
       router.refresh();
     } catch (err) {
       console.error("Failed to soft-delete quiz", err);
@@ -420,35 +414,6 @@ export default function QuizCard({ quiz }: QuizCardProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this quiz?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will hide the quiz from students and mark it as deleted. You can’t
-              undo this from the student side. Are you sure you want to continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={deleting}
-              className="bg-slate-100 text-slate-800 hover:bg-slate-200"
-            >
-              Cancel
-            </AlertDialogAction>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

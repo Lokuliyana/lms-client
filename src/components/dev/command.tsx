@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent } from "@/components/dev/dialog"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -15,7 +15,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white text-slate-900 border-0 outline-none",
+      "flex h-full w-full flex-col bg-white text-slate-900 outline-none",
       className
     )}
     {...props}
@@ -25,21 +25,26 @@ Command.displayName = CommandPrimitive.displayName
 
 const CommandDialog = ({ children, ...props }: DialogProps) => {
   return (
-    <Dialog {...props}>
-      <DialogContent
-        hideClose
-        variant="bare"
-        className="overflow-hidden p-0 rounded-3xl border-2 border-indigo-200/80 bg-white shadow-2xl max-w-2xl w-[95vw] sm:w-[620px] mx-auto outline-none"
-        style={{
-          boxShadow:
-            "0 25px 60px -15px rgba(79, 70, 229, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95)",
-        }}
-      >
-        <Command className="bg-transparent text-slate-900">
-          {children}
-        </Command>
-      </DialogContent>
-    </Dialog>
+    <DialogPrimitive.Root {...props}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-xs data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:transition-none" />
+        <DialogPrimitive.Content
+          className={cn(
+            "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[61]",
+            "w-[95vw] sm:w-[580px] max-w-xl",
+            "rounded-2xl border border-slate-200/90 bg-white overflow-hidden outline-none",
+            "shadow-[0_20px_50px_-12px_rgba(15,23,42,0.18),0_0_0_1px_rgba(15,23,42,0.04)]",
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-2",
+            "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-top-2",
+            "motion-reduce:transition-none"
+          )}
+        >
+          <Command className="bg-transparent text-slate-900">
+            {children}
+          </Command>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 
@@ -48,14 +53,14 @@ const CommandInput = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div
-    className="flex items-center px-4 py-3 bg-transparent border-b border-indigo-100/60"
+    className="flex items-center px-4 py-3 bg-white border-b border-slate-100"
     cmdk-input-wrapper=""
   >
-    <Search className="h-5 w-5 shrink-0 text-indigo-500 mr-3" />
+    <Search className="h-4.5 w-4.5 shrink-0 text-slate-400 mr-3" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "w-full bg-transparent text-sm sm:text-base font-medium text-slate-900 placeholder:text-slate-400",
+        "w-full bg-transparent text-sm sm:text-[15px] font-normal text-slate-900 placeholder:text-slate-400",
         "border-0 border-none outline-none ring-0 shadow-none",
         "focus:border-0 focus:border-none focus:outline-none focus:ring-0 focus:shadow-none",
         "focus-visible:border-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none",
@@ -77,7 +82,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[420px] overflow-y-auto overflow-x-hidden p-2.5 space-y-1.5 scrollbar-thin", className)}
+    className={cn("max-h-[380px] overflow-y-auto overflow-x-hidden p-2 space-y-1 scrollbar-thin", className)}
     {...props}
   />
 ))
@@ -90,7 +95,7 @@ const CommandEmpty = React.forwardRef<
 >((props, ref) => (
   <CommandPrimitive.Empty
     ref={ref}
-    className="py-8 text-center text-xs font-medium text-slate-500"
+    className="py-10 text-center text-xs font-medium text-slate-500"
     {...props}
   />
 ))
@@ -104,7 +109,7 @@ const CommandGroup = React.forwardRef<
   <CommandPrimitive.Group
     ref={ref}
     className={cn(
-      "overflow-hidden p-1 text-slate-900 [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:text-indigo-900/60 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider",
+      "overflow-hidden px-1.5 py-1 text-slate-900 [&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-400 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider",
       className
     )}
     {...props}
@@ -119,7 +124,7 @@ const CommandSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1.5 h-px bg-indigo-100/60", className)}
+    className={cn("-mx-1 my-1.5 h-px bg-slate-100", className)}
     {...props}
   />
 ))
@@ -132,10 +137,9 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer gap-2.5 select-none items-center rounded-2xl px-3 py-2 text-xs font-medium text-slate-700 outline-none",
-      "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-all duration-150",
-      "data-[selected='true']:bg-gradient-to-r data-[selected='true']:from-indigo-50 data-[selected='true']:via-purple-50/70 data-[selected='true']:to-indigo-50/50",
-      "data-[selected='true']:text-indigo-950 data-[selected='true']:border data-[selected='true']:border-indigo-200/70 data-[selected='true']:shadow-2xs",
+      "relative flex cursor-pointer gap-3 select-none items-center rounded-xl px-3 py-2 text-xs font-medium text-slate-700 outline-none",
+      "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 transition-colors duration-100",
+      "data-[selected='true']:bg-slate-100 data-[selected='true']:text-slate-900",
       className
     )}
     {...props}

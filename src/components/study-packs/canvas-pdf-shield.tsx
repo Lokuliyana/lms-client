@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ForensicWatermarkOverlay, ForensicWatermarkData } from "@/components/ui/forensic-watermark-overlay";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,164 @@ import {
   ZoomOut,
   Lock,
   X,
+  Loader2,
 } from "lucide-react";
+
+const PDFJS_SCRIPT_SRC = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const PDFJS_WORKER_SRC = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+interface PdfCanvasPageProps {
+  pdfDoc: any;
+  pageNumber: number;
+  zoom: number;
+}
+
+function PdfCanvasPage({ pdfDoc, pageNumber, zoom }: PdfCanvasPageProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const renderTaskRef = useRef<any>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState<number>(0.707); // Default A4 ratio (1 / 1.414)
+  const [rendered, setRendered] = useState(false);
+
+  // Lazy render using IntersectionObserver with bidirectional visibility tracking
+  // to prevent iOS Safari memory exhaustion from retaining 50+ canvas buffers.
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsVisible(entry.isIntersecting);
+        });
+      },
+      { rootMargin: "600px 0px" }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!isVisible) {
+      // Free canvas buffer memory when scrolled far off-screen
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch {
+          // ignore
+        }
+        renderTaskRef.current = null;
+      }
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+      setRendered(false);
+      return;
+    }
+
+    const render = async () => {
+      try {
+        // If a previous render task was running on this canvas, cancel it and wait
+        if (renderTaskRef.current) {
+          try {
+            renderTaskRef.current.cancel();
+            await renderTaskRef.current.promise;
+          } catch {
+            // Cancelled exception expected
+          }
+          renderTaskRef.current = null;
+        }
+
+        const page = await pdfDoc.getPage(pageNumber);
+        if (isCancelled || !canvasRef.current) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        // Cap DPR to 2 on mobile retina screens to avoid iOS Safari canvas memory limit crashes
+        const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+        const baseScale = (zoom / 100) * 1.35;
+        const viewport = page.getViewport({ scale: baseScale });
+
+        if (viewport.width && viewport.height) {
+          setAspectRatio(viewport.width / viewport.height);
+        }
+
+        canvas.width = Math.floor(viewport.width * dpr);
+        canvas.height = Math.floor(viewport.height * dpr);
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport,
+        };
+
+        const renderTask = page.render(renderContext);
+        renderTaskRef.current = renderTask;
+        await renderTask.promise;
+        if (!isCancelled) {
+          setRendered(true);
+        }
+      } catch (err: any) {
+        if (err?.name !== "RenderingCancelledException") {
+          console.warn(`Render page ${pageNumber} error:`, err);
+        }
+      }
+    };
+
+    render();
+
+    return () => {
+      isCancelled = true;
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+      }
+    };
+  }, [pdfDoc, pageNumber, zoom, isVisible]);
+
+  // Scaled max width based on zoom level:
+  // At zoom 100%, fits container nicely (e.g. max-w-2xl or 100%).
+  // At zoom > 100%, allows expanding up to (zoom / 100) * 780px so zooming is visually effective!
+  const containerStyle: React.CSSProperties = {
+    aspectRatio: `${aspectRatio}`,
+    width: zoom > 100 ? `${zoom}%` : "100%",
+    maxWidth: zoom > 100 ? `${Math.floor((zoom / 100) * 780)}px` : "780px",
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative shadow-2xl rounded-lg overflow-hidden bg-white my-3 shrink-0 flex flex-col items-center transition-all duration-150"
+      style={containerStyle}
+    >
+      <canvas
+        ref={canvasRef}
+        className={`block w-full !h-auto transition-opacity duration-200 ${
+          rendered ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      {!rendered && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/50 text-slate-400 gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+          <span className="text-xs font-mono">Page {pageNumber}</span>
+        </div>
+      )}
+      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white/90 text-[10px] font-mono pointer-events-none select-none backdrop-blur-xs">
+        Page {pageNumber}
+      </div>
+    </div>
+  );
+}
 
 interface CanvasPdfShieldProps {
   title: string;
@@ -43,15 +200,116 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
   const [isWindowBlurred, setIsWindowBlurred] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pdfLoading, setPdfLoading] = useState<boolean>(false);
+  const [useFallback, setUseFallback] = useState<boolean>(false);
+
+
+
+  const cleanPdfUrl = pdfUrl
+    ? `${pdfUrl.split("#")[0]}#toolbar=0&navpanes=0&scrollbar=1`
+    : null;
+
+  const isBrokenBucketUrl = Boolean(
+    pdfUrl &&
+      (pdfUrl.includes("akeagjxcoxqqfjurotod.supabase.co") ||
+        pdfUrl.includes("supabase.co") ||
+        pdfUrl.includes("demo-bucket") ||
+        pdfUrl.includes("backblaze") ||
+        pdfUrl.includes("backblazeb2"))
+  );
+
+  // Dynamically load PDF.js in the browser for high-DPI crisp vector canvas rendering & iOS touch scrolling
+  useEffect(() => {
+    if (typeof window === "undefined" || !pdfUrl || isLocked || isBrokenBucketUrl) return;
+
+    let isMounted = true;
+
+    const initPdf = async () => {
+      try {
+        setPdfLoading(true);
+
+        if (!(window as any).pdfjsLib) {
+          await new Promise<void>((resolve, reject) => {
+            const existingScript = document.querySelector(`script[src="${PDFJS_SCRIPT_SRC}"]`);
+            if (existingScript) {
+              existingScript.addEventListener("load", () => resolve());
+              existingScript.addEventListener("error", () => reject(new Error("PDF.js load error")));
+              if ((window as any).pdfjsLib) resolve();
+              return;
+            }
+            const script = document.createElement("script");
+            script.src = PDFJS_SCRIPT_SRC;
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("Failed to load PDF.js library"));
+            document.head.appendChild(script);
+          });
+        }
+
+        const pdfjs = (window as any).pdfjsLib;
+        if (!pdfjs) throw new Error("pdfjsLib not available");
+        try {
+          // In WebKit/Safari, creating a Worker directly from a cross-origin URL can throw SecurityError.
+          // Using a blob wrapper ensures WebKit accepts the worker instantiation.
+          const blobCode = `importScripts("${PDFJS_WORKER_SRC}");`;
+          const workerBlob = new Blob([blobCode], { type: "application/javascript" });
+          pdfjs.GlobalWorkerOptions.workerSrc = URL.createObjectURL(workerBlob);
+        } catch {
+          pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_SRC;
+        }
+
+        const rawUrl = pdfUrl.split("#")[0];
+        const loadingTask = pdfjs.getDocument({
+          url: rawUrl,
+          withCredentials: false,
+        });
+
+        const doc = await loadingTask.promise;
+        if (!isMounted) return;
+
+        setPdfDoc(doc);
+        setNumPages(doc.numPages);
+        setUseFallback(false);
+      } catch (err: any) {
+        console.warn("Canvas PDF load notice: fallback mode active", err?.message || err);
+        if (isMounted) {
+          setUseFallback(true);
+        }
+      } finally {
+        if (isMounted) {
+          setPdfLoading(false);
+        }
+      }
+    };
+
+    initPdf();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pdfUrl, isLocked, isBrokenBucketUrl]);
 
   useEffect(() => {
     let blurTimeout: NodeJS.Timeout;
 
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0));
+
     const handleBlur = () => {
-      // Delay occlusion check so that clicking inside the child PDF viewer iframe
-      // does not trigger a false-positive screen lock.
+      // On mobile / touch devices (iOS Safari), window.blur fires falsely during normal gestures,
+      // URL bar collapsing, and momentum scrolling. On touch devices, rely strictly on document.visibilityState.
+      if (isTouchDevice) {
+        if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+          setIsWindowBlurred(true);
+        }
+        return;
+      }
+
+      // Delay occlusion check for desktop window focus switching
       blurTimeout = setTimeout(() => {
-        // If the browser document itself still has focus or is active, do not occlude.
         if (typeof document !== "undefined") {
           if (!document.hasFocus() || document.visibilityState === "hidden") {
             setIsWindowBlurred(true);
@@ -68,7 +326,7 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         setIsWindowBlurred(true);
-      } else if (typeof document !== "undefined" && document.hasFocus()) {
+      } else if (typeof document !== "undefined" && (isTouchDevice || document.hasFocus())) {
         setIsWindowBlurred(false);
       }
     };
@@ -85,18 +343,7 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
     };
   }, []);
 
-  const cleanPdfUrl = pdfUrl
-    ? `${pdfUrl.split("#")[0]}#toolbar=0&navpanes=0&scrollbar=1`
-    : null;
 
-  const isBrokenBucketUrl = Boolean(
-    pdfUrl &&
-      (pdfUrl.includes("akeagjxcoxqqfjurotod.supabase.co") ||
-        pdfUrl.includes("supabase.co") ||
-        pdfUrl.includes("demo-bucket") ||
-        pdfUrl.includes("backblaze") ||
-        pdfUrl.includes("backblazeb2"))
-  );
 
   return (
     <div
@@ -107,10 +354,16 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
       style={{
         userSelect: "none",
         WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
       }}
     >
-      {/* Dynamic CSS Print Suppression */}
+      {/* Dynamic CSS Print & iOS Callout Suppression */}
       <style>{`
+        .canvas-pdf-shield-root,
+        .canvas-pdf-shield-content,
+        canvas {
+          -webkit-touch-callout: none !important;
+        }
         @media print {
           body,
           .canvas-pdf-shield-root,
@@ -132,6 +385,9 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
             <span className="text-[10px] text-emerald-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Secure Canvas Shield Active • Forensic Watermarked
+              {numPages > 0 && !useFallback && (
+                <span className="ml-1 text-slate-400 font-mono">({numPages} {numPages === 1 ? "page" : "pages"})</span>
+              )}
             </span>
           </div>
         </div>
@@ -222,16 +478,37 @@ export const CanvasPdfShield: React.FC<CanvasPdfShieldProps> = ({
               </span>
             </div>
           </div>
+        ) : !useFallback && pdfDoc && numPages > 0 ? (
+          <div
+            className="canvas-pdf-shield-content w-full h-full relative overflow-y-auto overflow-x-auto flex flex-col items-center p-2 sm:p-6 bg-slate-950 overscroll-contain"
+            style={{
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
+              <PdfCanvasPage
+                key={pageNum}
+                pdfDoc={pdfDoc}
+                pageNumber={pageNum}
+                zoom={zoom}
+              />
+            ))}
+          </div>
+        ) : pdfLoading ? (
+          <div className="p-8 text-center max-w-md space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-400 mx-auto" />
+            <p className="text-xs text-slate-400">Loading vector canvas document...</p>
+          </div>
         ) : (
           <div
-            className="canvas-pdf-shield-content w-full h-full relative overflow-auto flex justify-center p-2 bg-slate-950 transition-transform duration-200"
-            style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
+            className="canvas-pdf-shield-content w-full h-full relative overflow-auto flex justify-center p-2 bg-slate-950"
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
             {/* Embedded Secure PDF Renderer (suppresses download/print toolbar parameters) */}
             <iframe
               src={cleanPdfUrl || ""}
               title={title}
-              className="w-full h-full border-0 rounded-lg bg-white"
+              className="w-full h-full border-0 rounded-lg bg-white min-h-[460px]"
             />
           </div>
         )}

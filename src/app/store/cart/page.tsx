@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/dev/label";
 import { CLAY_ASSETS } from "@/constants/clayAssets";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 export default function StoreCartPage() {
   const router = useRouter();
@@ -43,6 +44,19 @@ export default function StoreCartPage() {
     clearCart,
   } = useCart();
 
+  const confirm = useConfirm();
+
+  const handleClearCart = async () => {
+    const ok = await confirm({
+      title: "Clear Shopping Cart?",
+      message: "Are you sure you want to remove all items from your cart?",
+      confirmText: "Clear Cart",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    clearCart();
+  };
+
   // Courier shipping details state
   const [recipientName, setRecipientName] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
@@ -54,13 +68,14 @@ export default function StoreCartPage() {
   // Pre-fill user data when available
   useEffect(() => {
     if (user) {
+      const u = user as any;
       const name =
-        user.full_name ||
-        user.fullName ||
-        [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+        u.full_name ||
+        u.fullName ||
+        [u.firstName, u.lastName].filter(Boolean).join(" ").trim();
       if (name && !recipientName) setRecipientName(name);
-      if (user.phone && !contactPhone) setContactPhone(user.phone);
-      if (user.address && !shippingAddress) setShippingAddress(user.address);
+      if (u.phone && !contactPhone) setContactPhone(u.phone);
+      if (u.address && !shippingAddress) setShippingAddress(u.address);
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,8 +219,8 @@ export default function StoreCartPage() {
 
                 <button
                   type="button"
-                  onClick={clearCart}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold transition-colors flex items-center gap-1"
+                  onClick={handleClearCart}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Clear Cart</span>
@@ -263,28 +278,28 @@ export default function StoreCartPage() {
                       </div>
 
                       {/* Quantity & Line Total & Delete */}
-                      <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100 dark:border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-slate-100 dark:border-slate-800">
                         {/* Stepper */}
                         <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                           <button
                             type="button"
                             onClick={() => updateCartQty(product._id, -1)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="px-3 text-xs font-bold text-slate-900 dark:text-white min-w-[28px] text-center">
+                          <span className="px-2.5 sm:px-3 text-xs font-bold text-slate-900 dark:text-white min-w-[24px] sm:min-w-[28px] text-center">
                             {quantity}
                           </span>
                           <button
                             type="button"
                             onClick={() => updateCartQty(product._id, 1)}
                             disabled={isMaxStock}
-                            className={`p-2 transition-colors ${
+                            className={`p-1.5 sm:p-2 transition-colors ${
                               isMaxStock
                                 ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
-                                : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+                                : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
                             }`}
                             aria-label="Increase quantity"
                           >
@@ -293,7 +308,7 @@ export default function StoreCartPage() {
                         </div>
 
                         {/* Line Total */}
-                        <div className="text-right min-w-[90px]">
+                        <div className="text-right min-w-[70px] sm:min-w-[90px]">
                           <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
                             LKR {lineTotal.toLocaleString()}
                           </span>
@@ -303,7 +318,7 @@ export default function StoreCartPage() {
                         <button
                           type="button"
                           onClick={() => removeFromCart(product._id)}
-                          className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                           title="Remove item"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -451,7 +466,7 @@ export default function StoreCartPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || cartItems.length === 0}
-                  className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:shadow-lg"
+                  className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:shadow-lg cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

@@ -13,6 +13,7 @@ import { deleteRecording, getRecordingsByClass } from "@/services/recordingServi
 import { extractYouTubeId } from "@/components/ui/secure-video-player";
 import { EmptyCard } from "./empty-card";
 import { CLAY_ASSETS } from "@/constants/clayAssets";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 export interface RecordingDto {
   _id: string;
@@ -52,6 +53,7 @@ function toDate(input?: string | null): Date | null {
 export function ClassRecordings({ recordings, classId }: ClassRecordingsProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [items, setItems] = useState<RecordingDto[]>(recordings || []);
 
@@ -81,7 +83,12 @@ export function ClassRecordings({ recordings, classId }: ClassRecordingsProps) {
   const handleDelete = async (id: string) => {
     if (!isTeacherOrAdmin) return;
 
-    const ok = window.confirm("Are you sure you want to delete this recording?");
+    const ok = await confirm({
+      title: "Delete Recording?",
+      message: "Are you sure you want to delete this class recording? Students will permanently lose access to it.",
+      confirmText: "Delete Recording",
+      variant: "destructive",
+    });
     if (!ok) return;
 
     try {

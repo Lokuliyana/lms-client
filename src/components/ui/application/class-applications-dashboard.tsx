@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { ManualEnrollModal } from "@/components/ui/class-view/ManualEnrollModal";
+import { useConfirm } from "@/components/ui/confirmation-dialog";
 
 // services
 import {
@@ -174,6 +175,7 @@ const mapApiToUi = (item: any): Application => {
  * Component
  * =========================== */
 export function ClassApplicationsDashboard() {
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<"applications" | "students">("applications");
 
   // --- Applications State ---
@@ -360,7 +362,13 @@ export function ClassApplicationsDashboard() {
     approveOrReject(applicationId, "rejected");
 
   const handleRevoke = async (classId: string, studentId: string, studentName: string) => {
-    if (!confirm(`Are you sure you want to revoke active class access for ${studentName}?`)) {
+    const ok = await confirm({
+      title: "Revoke Class Access?",
+      message: `Are you sure you want to revoke active class access for ${studentName}? The student will lose access to class materials and live sessions.`,
+      confirmText: "Revoke Access",
+      variant: "destructive",
+    });
+    if (!ok) {
       return;
     }
     try {
